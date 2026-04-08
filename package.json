@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/mcp-server.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/bundle-mcp.mjs",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit"
   },
@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.19.7",
+    "esbuild": "^0.28.0",
     "typescript": "^5.7.2"
   },
   "engines": {
