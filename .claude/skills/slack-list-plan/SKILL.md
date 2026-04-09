@@ -15,6 +15,17 @@ Slack List의 수정요청/작업 아이템을 가져와서 구조화된 작업 
 
 ## 실행 흐름
 
+### Step 0: 설정 확인
+
+`.harness/config.env` 파일이 존재하고 `SLACK_BOT_TOKEN` 또는 `SLACK_USER_TOKEN` 키가 포함되어 있는지 확인한다.
+
+설정이 없으면:
+```
+Slack 토큰이 설정되지 않았습니다.
+먼저 /proj-slack-setup 을 실행해 토큰을 저장하세요.
+```
+라고 안내하고 실행을 중단한다.
+
 ### Step 1: Slack List 데이터 가져오기
 
 아래 명령으로 fetch 스크립트를 실행하여 Slack List 데이터를 가져온다.

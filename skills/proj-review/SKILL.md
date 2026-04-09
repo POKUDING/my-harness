@@ -1,5 +1,5 @@
 ---
-name: harness-review
+name: proj-review
 description: Structured code review workflow for staged or recent changes
 ---
 

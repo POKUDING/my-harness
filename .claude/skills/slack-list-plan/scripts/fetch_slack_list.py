@@ -38,6 +38,24 @@ EXPORT_MAX_WAIT = 120  # seconds
 REQUEST_TIMEOUT = 30  # seconds
 
 
+def load_harness_config():
+    """프로젝트 루트의 .harness/config.env에서 설정을 로드한다.
+    config.env 값이 항상 우선 적용된다 (기존 환경변수를 덮어씀).
+    """
+    path = Path.cwd()
+    for _ in range(5):
+        config_file = path / ".harness" / "config.env"
+        if config_file.exists():
+            with open(config_file) as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        key, _, val = line.partition("=")
+                        os.environ[key.strip()] = val.strip()
+            return
+        path = path.parent
+
+
 def get_token():
     """환경변수에서 Slack 토큰을 우선순위 순으로 가져온다."""
     for var in ("SLACK_BOT_TOKEN", "SLACK_USER_TOKEN", "SLACK_TOKEN"):
@@ -240,15 +258,16 @@ def main():
     )
     args = parser.parse_args()
 
-    # 1. 토큰 확인
+    # 1. 토큰 확인 (.harness/config.env → 환경변수 순으로 탐색)
+    load_harness_config()
     token = get_token()
     if not token:
         die(
             "Slack 토큰이 설정되지 않았습니다.\n"
+            "/harness-setup 을 실행하여 토큰을 저장하거나,\n"
             "다음 환경변수 중 하나를 설정하세요:\n"
             "  export SLACK_BOT_TOKEN=xoxb-...\n"
-            "  export SLACK_USER_TOKEN=xoxp-...\n"
-            "  export SLACK_TOKEN=xoxb-..."
+            "  export SLACK_USER_TOKEN=xoxp-..."
         )
 
     # 2. List ID 파싱

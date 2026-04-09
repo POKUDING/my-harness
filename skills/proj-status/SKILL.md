@@ -1,5 +1,5 @@
 ---
-name: harness-status
+name: proj-status
 description: Analyze current project status - git, files, dependencies, and health
 ---
 
