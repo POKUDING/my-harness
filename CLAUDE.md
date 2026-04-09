@@ -3,7 +3,7 @@
 Personal productivity plugin for Claude Code.
 
 ## Skills
-- `/proj-slack-setup` - Configure project-level API tokens (saved to `.harness/config.env`, gitignored)
+- `/slack-setup` - Configure project-level API tokens (saved to `.harness/config.env`, gitignored)
 - `/proj-status` - Analyze current project status (git, files, dependencies)
 - `/proj-review` - Run a structured code review workflow
 

@@ -1,5 +1,5 @@
 ---
-name: proj-slack-setup
+name: slack-setup
 description: Configure project-level API tokens saved to .harness/config.env (gitignored)
 ---
 
