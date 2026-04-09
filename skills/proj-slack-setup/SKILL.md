@@ -1,47 +1,40 @@
 ---
 name: proj-slack-setup
-description: my-harness 플러그인의 프로젝트별 API 토큰/설정을 저장한다 (.harness/config.env)
+description: Configure project-level API tokens saved to .harness/config.env (gitignored)
 ---
 
-# my-harness 설정
+# Project Service Setup
 
-이 프로젝트에서 사용할 API 토큰을 `.harness/config.env`에 저장한다.
-파일은 gitignore되어 로컬에만 보관된다.
+Store API tokens for this project in .harness/config.env (gitignored, local only).
 
-## Step 1: 현재 설정 확인
+## Step 1: Check existing config
 
-`.harness/config.env` 파일이 존재하면 현재 저장된 키 목록을 읽어 사용자에게 보여준다 (값은 마스킹: `xoxb-****`).
-파일이 없으면 "아직 설정이 없습니다"라고 안내한다.
+Read .harness/config.env if it exists. Show the user which keys are already saved (mask values). If the file does not exist, inform the user there is no config yet.
 
-## Step 2: 설정할 서비스 선택
+## Step 2: Ask which service to configure
 
-사용자에게 어떤 서비스를 설정할지 묻는다 (예: "1. Slack / 2. 종료").
+Ask the user: "Which service would you like to configure? 1. Slack  2. Exit"
 
-## Step 3: Slack 토큰 입력
+## Step 3: Slack token input
 
-Slack을 선택한 경우:
-- "Slack Bot Token (xoxb-...) 또는 User Token (xoxp-...)을 입력하세요:" 라고 묻는다.
-- 입력값이 `xoxb-` 또는 `xoxp-`로 시작하는지 검증한다.
-- 유효하지 않으면 다시 묻는다.
+If Slack is selected, ask: "Enter your Slack Bot Token (xoxb-...) or User Token (xoxp-...):"
 
-Bot Token → `SLACK_BOT_TOKEN`으로 저장
-User Token → `SLACK_USER_TOKEN`으로 저장
+Validate the input starts with xoxb- or xoxp-. If not, ask again.
 
-## Step 4: .harness/config.env 저장
+Save Bot Tokens as SLACK_BOT_TOKEN and User Tokens as SLACK_USER_TOKEN.
 
-Write 도구로 `.harness/config.env`를 생성/업데이트한다.
+## Step 4: Save .harness/config.env
 
-파일 형식: 첫 줄에 `# my-harness project config`, 두 번째 줄에 `# DO NOT COMMIT - this file is gitignored`, 이후 `KEY=value` 형태로 저장한다.
+Use the Write tool to create or update .harness/config.env in the project root.
 
-기존 파일이 있으면 해당 키만 업데이트하고 나머지는 유지한다.
-파일이 없으면 새로 생성한다.
+Format: one KEY=value per line. Add a comment at the top: "# DO NOT COMMIT - this file is gitignored".
 
-## Step 5: .gitignore 확인 및 업데이트
+If the file already exists, update only the relevant key and preserve other entries.
 
-`.gitignore`에 `.harness/` 또는 `.harness/config.env`가 포함되어 있는지 확인한다.
-없으면 `.gitignore`에 `.harness/` 라인을 추가한다.
+## Step 5: Check .gitignore
 
-## Step 6: 완료 안내
+Verify .harness/ is in .gitignore. If not, add it.
 
-저장된 키 이름 목록을 보여준다 (값은 마스킹).
-"이제 /slack-list-plan을 사용할 수 있습니다." 라고 안내한다.
+## Step 6: Confirm
+
+Show the saved key names (mask values). Tell the user they can now run /slack-list-plan.
