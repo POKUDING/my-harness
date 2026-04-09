@@ -15,13 +15,7 @@ description: my-harness 플러그인의 프로젝트별 API 토큰/설정을 저
 
 ## Step 2: 설정할 서비스 선택
 
-사용자에게 어떤 서비스를 설정할지 묻는다:
-
-```
-어떤 서비스를 설정할까요?
-1. Slack (slack-list-plan 스킬에 필요)
-2. 종료
-```
+사용자에게 어떤 서비스를 설정할지 묻는다 (예: "1. Slack / 2. 종료").
 
 ## Step 3: Slack 토큰 입력
 
@@ -37,12 +31,7 @@ User Token → `SLACK_USER_TOKEN`으로 저장
 
 Write 도구로 `.harness/config.env`를 생성/업데이트한다.
 
-파일 형식:
-```
-# my-harness project config
-# DO NOT COMMIT - this file is gitignored
-SLACK_BOT_TOKEN=xoxb-...
-```
+파일 형식: 첫 줄에 `# my-harness project config`, 두 번째 줄에 `# DO NOT COMMIT - this file is gitignored`, 이후 `KEY=value` 형태로 저장한다.
 
 기존 파일이 있으면 해당 키만 업데이트하고 나머지는 유지한다.
 파일이 없으면 새로 생성한다.
