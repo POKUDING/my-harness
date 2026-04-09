@@ -1,0 +1,33 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "my-harness",
+  "version": "0.1.0",
+  "description": "POKUDING's personal Claude Code plugin marketplace",
+  "owner": {
+    "name": "POKUDING",
+    "url": "https://github.com/POKUDING"
+  },
+  "plugins": [
+    {
+      "name": "my-harness",
+      "description": "Personal productivity plugin - SessionStart/PreToolUse hooks, /harness-status, /harness-review, /slack-list-plan skills, researcher/quick-fix agents, and harness_project_info MCP tool",
+      "version": "0.1.0",
+      "author": {
+        "name": "POKUDING"
+      },
+      "repository": "https://github.com/POKUDING/my-harness",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/POKUDING/my-harness.git"
+      },
+      "category": "productivity",
+      "keywords": [
+        "personal",
+        "productivity",
+        "hooks",
+        "mcp",
+        "slack"
+      ]
+    }
+  ]
+}
