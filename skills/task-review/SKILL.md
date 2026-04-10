@@ -13,7 +13,7 @@ Slack List 계획서의 미완료 항목을 확인하고, 코드 변경사항을
 /task-review <SLACK_LIST_URL 또는 LIST_ID>
 ```
 
-인자 없이 실행 시, `docs/plans/` 디렉토리에서 가장 최근 `slack-list-*-plan.md` 파일을 자동으로 찾는다.
+인자 없이 실행 시, `.harness/config.env`의 `SLACK_LIST_URL`을 사용한다. 설정이 없으면 `docs/plans/`에서 가장 최근 `slack-list-*-plan.md` 파일을 fallback으로 찾는다.
 
 ## 실행 흐름
 
