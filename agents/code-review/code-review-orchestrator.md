@@ -80,8 +80,8 @@ Agent(
 ## 출력
 
 최종 보고서는 두 형태로 생성한다:
-- `_reviews/{date}-review.md` — 사람이 읽는 Markdown
-- `_reviews/{date}-review.json` — 기계가 읽는 JSON
+- `_reviews/{YYYYMMDD_HHmmss}-review.md` — 사람이 읽는 Markdown
+- `_reviews/{YYYYMMDD_HHmmss}-review.json` — 기계가 읽는 JSON
 
 출력 형식 상세는 `skills/code-review/references/report-format.md` 참조.
 
