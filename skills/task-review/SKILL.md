@@ -1,0 +1,193 @@
+---
+name: task-review
+description: Slack List 미완료 요청 확인, 코드 변경 검증, 코드리뷰, 완료 처리까지 일괄 수행
+---
+
+# Task Review - 작업 검증 및 완료 처리
+
+Slack List 계획서의 미완료 항목을 확인하고, 코드 변경사항을 검증한 뒤 코드리뷰를 거쳐 Slack List 항목을 완료 상태로 업데이트한다.
+
+## 사용법
+
+```
+/task-review <SLACK_LIST_URL 또는 LIST_ID>
+```
+
+인자 없이 실행 시, `docs/plans/` 디렉토리에서 가장 최근 `slack-list-*-plan.md` 파일을 자동으로 찾는다.
+
+## 실행 흐름
+
+### Step 0: 설정 확인
+
+`.harness/config.env` 파일에서 `SLACK_BOT_TOKEN` 또는 `SLACK_USER_TOKEN`이 있는지 확인한다.
+
+없으면 안내 후 중단:
+```
+Slack 토큰이 설정되지 않았습니다.
+먼저 /slack-setup 을 실행해 토큰을 저장하세요.
+```
+
+### Step 1: 미완료 요청사항 확인
+
+Slack List에서 최신 데이터를 가져온다:
+
+```bash
+python3 .claude/skills/slack-list-plan/scripts/fetch_slack_list.py "{{ARGUMENTS}}"
+```
+
+가져온 아이템 중 상태가 **완료가 아닌 항목**을 필터링한다.
+- 상태 컬럼 이름은 `status`, `상태`, `state` 등 다양할 수 있으므로 유연하게 매칭한다.
+- 완료로 간주하는 값: `완료`, `done`, `complete`, `completed`, `백엔드 완료`, `BE 완료`
+- 그 외 모든 값은 미완료로 간주한다.
+
+미완료 항목이 없으면:
+```
+모든 요청사항이 완료 상태입니다. 처리할 항목이 없습니다.
+```
+라고 안내하고 종료한다.
+
+미완료 항목 목록을 사용자에게 표로 보여준다:
+```markdown
+## 미완료 요청사항 ({N}건)
+
+| # | 요청 내용 | 현재 상태 | 담당자 |
+|---|----------|----------|--------|
+| 1 | ...      | ...      | ...    |
+```
+
+### Step 2: 코드 변경 확인
+
+각 미완료 항목에 대해 관련 코드 변경이 있는지 확인한다:
+
+1. `docs/plans/` 디렉토리에서 관련 계획서(`slack-list-*-plan.md`)를 읽어 TODO 항목과 예상 작업 범위를 파악한다.
+2. `git log --oneline --since="2 weeks ago"` 및 `git diff main...HEAD`로 최근 변경 사항을 확인한다.
+3. 변경된 파일 목록과 커밋 메시지를 미완료 항목의 키워드와 대조한다.
+
+각 항목별 작업 진행 상태를 판정한다:
+- **작업됨**: 관련 코드 변경이 확인됨
+- **미작업**: 관련 코드 변경 없음
+- **부분 작업**: 일부만 변경됨
+
+결과를 사용자에게 보여준다:
+```markdown
+## 작업 진행 현황
+
+| # | 요청 내용 | 진행 상태 | 관련 변경 |
+|---|----------|----------|----------|
+| 1 | ...      | 작업됨    | src/foo.ts (+23/-5), ... |
+| 2 | ...      | 미작업    | -        |
+```
+
+**미작업 항목이 있으면** 사용자에게 알리고, 작업됨/부분 작업 항목에 대해서만 다음 단계를 진행할지 확인한다.
+
+### Step 3: 코드리뷰 진행
+
+작업됨으로 판정된 각 항목에 대해 `/proj-review` 스킬과 동일한 기준으로 코드리뷰를 수행한다:
+
+1. 해당 항목과 관련된 파일의 변경사항(`git diff`)을 대상으로 리뷰
+2. 리뷰 기준:
+   - Logic errors or bugs
+   - Security concerns
+   - Performance issues
+   - Code style consistency
+   - Missing error handling at system boundaries
+3. 각 항목별 verdict 판정: `APPROVE` | `REQUEST_CHANGES` | `NEEDS_DISCUSSION`
+
+결과를 사용자에게 보여준다:
+```markdown
+## 코드리뷰 결과
+
+### 항목 #1: <요청 내용 요약>
+- **Verdict**: APPROVE
+- **변경 파일**: src/foo.ts, src/bar.ts
+- **소견**: 정상적으로 구현됨. 추가 이슈 없음.
+
+### 항목 #2: <요청 내용 요약>
+- **Verdict**: REQUEST_CHANGES
+- **변경 파일**: src/baz.ts
+- **Findings**:
+  - 🔴 Critical: ...
+  - 🟡 Suggestion: ...
+```
+
+`REQUEST_CHANGES` 또는 `NEEDS_DISCUSSION` verdict가 있으면 해당 항목은 완료 처리하지 않고 사용자에게 수정을 안내한다.
+
+### Step 4: 완료 항목 코멘트 표시
+
+`APPROVE`를 받은 항목에 대해 작업 내용을 코멘트로 정리한다.
+
+Slack List 아이템에 코멘트를 추가한다:
+
+```
+[Task Review] 백엔드 작업 완료
+- 변경 파일: src/foo.ts, src/bar.ts
+- 커밋: abc1234 - <커밋 메시지>
+- 리뷰 결과: APPROVE
+- 처리일: YYYY-MM-DD
+```
+
+Slack API 호출:
+```
+POST lists.items.update
+{
+  "list_id": "<list_id>",
+  "item_id": "<item_id>",
+  "item": {
+    "comment": "<위 코멘트>"
+  }
+}
+```
+
+> 참고: `lists.items.update` API가 코멘트를 지원하지 않을 경우, `chat.postMessage`로 관련 채널에 완료 알림을 대신 보낸다.
+
+### Step 5: 백엔드 작업 완료 상태로 변경
+
+APPROVE된 항목의 Slack List 상태를 `백엔드 완료`로 변경한다.
+
+```
+POST lists.items.update
+{
+  "list_id": "<list_id>",
+  "item_id": "<item_id>",
+  "item": {
+    "fields": {
+      "<status_field_id>": "백엔드 완료"
+    }
+  }
+}
+```
+
+상태 필드 ID를 찾기 위해 `lists.items.get` 응답의 필드 구조를 먼저 확인한다.
+
+> Slack List API에서 직접 상태 변경이 불가능한 경우:
+> 1. 사용자에게 수동 변경을 안내한다.
+> 2. 관련 채널에 완료 메시지를 보내 알린다.
+
+### Step 6: 최종 요약
+
+전체 처리 결과를 요약한다:
+
+```markdown
+## Task Review 완료
+
+### 처리 결과
+| # | 요청 내용 | 리뷰 결과 | Slack 상태 |
+|---|----------|----------|-----------|
+| 1 | ...      | APPROVE  | 백엔드 완료 ✅ |
+| 2 | ...      | REQUEST_CHANGES | 미변경 ⚠️ |
+| 3 | ...      | 미작업    | 미변경 ⏳ |
+
+### 요약
+- 전체 미완료 항목: {N}건
+- 코드리뷰 통과: {X}건
+- 완료 처리됨: {X}건
+- 수정 필요: {Y}건
+- 미작업: {Z}건
+```
+
+## 주의사항
+
+1. **자동 완료 처리 전 반드시 사용자 확인**: APPROVE 항목을 Slack에 반영하기 전에 사용자에게 "다음 항목들을 백엔드 완료로 변경합니다. 진행할까요?" 라고 확인한다.
+2. **코드리뷰는 보수적으로**: 의심스러운 변경은 REQUEST_CHANGES로 판정한다.
+3. **Slack API 실패 시 graceful 처리**: API 호출 실패 시 에러를 표시하되 나머지 항목은 계속 처리한다.
+4. **계획서가 없는 경우**: `docs/plans/`에 관련 계획서가 없으면 커밋 메시지와 diff만으로 판단하되, 매칭 정확도가 낮을 수 있음을 사용자에게 알린다.
