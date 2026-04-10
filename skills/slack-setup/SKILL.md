@@ -23,6 +23,16 @@ Validate the input starts with xoxb- or xoxp-. If not, ask again.
 
 Save Bot Tokens as SLACK_BOT_TOKEN and User Tokens as SLACK_USER_TOKEN.
 
+## Step 3b: Slack List URL input
+
+Ask: "Slack List URL을 등록하시겠습니까? (선택사항, 나중에 추가 가능)"
+
+If yes, ask: "Slack List URL을 입력하세요 (https://...slack.com/lists/T.../F...):"
+
+Validate the input matches the pattern `https://*.slack.com/lists/*/F*`. If not, ask again.
+
+Save as SLACK_LIST_URL.
+
 ## Step 4: Save .harness/config.env
 
 Use the Write tool to create or update .harness/config.env in the project root.
