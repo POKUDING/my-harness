@@ -1,0 +1,174 @@
+---
+name: code-review-fix
+description: "코드 리뷰 결과를 기반으로 fix_now 항목을 파일별로 병렬 수정하는 스킬. /code-review로 생성된 리포트(JSON)를 입력으로 받아 여러 fix-agent를 동시에 생성하여 수정을 수행하고, 변경 요약을 출력한다. 코드 수정, 리뷰 반영, finding 고치기, 자동 수정 요청 시 이 스킬을 사용할 것."
+---
+
+# Code Review Fix — 리뷰 결과 병렬 수정
+
+`/code-review`로 생성된 리뷰 결과의 `fix_now` 항목을 파일별로 병렬 수정한다.
+
+## 사용법
+
+```
+/code-review-fix                                    # 가장 최근 리뷰 결과 사용
+/code-review-fix .harness/reviews/20260410_143022-review.json   # 특정 리뷰 결과 지정
+```
+
+## 실행 흐름
+
+### Step 0: 리뷰 결과 로드
+
+1. **인자 있음** → 지정된 JSON 파일을 Read
+2. **인자 없음** → `.harness/reviews/` 디렉토리에서 가장 최근 `*-review.json` 파일을 자동 탐지
+3. JSON이 없으면 안내 후 중단:
+   ```
+   리뷰 결과를 찾을 수 없습니다.
+   먼저 /code-review를 실행하세요.
+   ```
+
+### Step 1: fix_now 항목 필터링 및 그룹핑
+
+JSON의 `findings` 배열에서:
+1. `scope: "fix_now"` 항목만 필터링
+2. `severity: "nit"` 제외
+3. 파일 경로(`file`)별로 그룹핑
+
+fix_now 항목이 없으면:
+```
+수정할 항목이 없습니다. 모든 finding이 followup 범위입니다.
+```
+
+사용자에게 수정 계획을 보여준다:
+```markdown
+## 수정 계획
+
+| 파일 | findings | severity 분포 |
+|------|----------|--------------|
+| src/api/users.ts | CR-001, CR-004 | 1 Critical, 1 Major |
+| src/services/order.ts | CR-002, CR-003 | 2 Major |
+| src/utils/validate.ts | CR-007 | 1 Minor |
+
+총 5건 수정 예정 (3 파일). 진행할까요?
+```
+
+사용자 확인 후 진행한다.
+
+### Step 2: 파일별 fix-agent 병렬 생성
+
+**각 파일 그룹마다 1개의 fix-agent를 생성한다.** 모든 fix-agent를 한 번에 병렬로 생성한다.
+
+```
+# 파일 수만큼 Agent 호출을 한 번의 응답에서 동시 생성
+
+Agent(
+  description: "Fix src/api/users.ts",
+  subagent_type: "fix-agent",
+  model: "sonnet",
+  run_in_background: true,
+  prompt: """
+  다음 파일의 코드 리뷰 finding을 수정하라.
+  agents/code-review/fix-agent.md의 지침을 따르라.
+
+  ## 대상 파일
+  src/api/users.ts
+
+  ## 수정할 Findings
+  {해당 파일의 findings JSON 배열}
+
+  수정 후 변경 내역을 JSON으로 반환하라.
+  """
+)
+
+Agent(
+  description: "Fix src/services/order.ts",
+  subagent_type: "fix-agent",
+  model: "sonnet",
+  run_in_background: true,
+  prompt: """
+  ...(동일 구조)...
+  """
+)
+
+# ... 파일 수만큼 반복
+```
+
+### Step 3: 진행률 보고 및 결과 수집
+
+각 fix-agent가 완료될 때마다 진행 상황을 보고한다:
+
+```
+[진행] src/api/users.ts 수정 완료 (1/3 파일)
+  - 수정: 2건 (CR-001, CR-004)
+  - 스킵: 0건
+  - 실패: 0건
+```
+
+모든 fix-agent 완료 후 결과를 수집한다.
+
+### Step 4: 결과 검증
+
+수정된 파일들에 대해:
+1. 파일이 정상적으로 수정되었는지 확인 (Read로 재확인)
+2. 구문 오류 발생 여부 확인 (가능하면 `npx tsc --noEmit` 또는 해당 언어 lint 실행)
+3. 검증 실패 시 사용자에게 경고
+
+### Step 5: 변경 요약 보고
+
+```markdown
+## Code Review Fix 완료
+
+### 수정 결과
+| Finding | Severity | File | 결과 |
+|---------|----------|------|------|
+| CR-001 | Critical | src/api/users.ts | 수정 완료 |
+| CR-002 | Major | src/services/order.ts | 수정 완료 |
+| CR-003 | Major | src/services/order.ts | 실패 — 아키텍처 변경 필요 |
+| CR-004 | Major | src/api/users.ts | 수정 완료 |
+| CR-007 | Minor | src/utils/validate.ts | 수정 완료 |
+
+### 요약
+- 수정 완료: 4건
+- 스킵 (followup): 3건
+- 실패: 1건
+
+### followup 항목 (이번에 수정하지 않음)
+| Finding | Severity | File | 사유 |
+|---------|----------|------|------|
+| CR-005 | Major | src/models/user.ts | 기존 구조 문제, 별도 리팩토링 필요 |
+| CR-006 | Minor | src/config/db.ts | 이 PR 범위 밖 |
+| CR-008 | Minor | src/utils/format.ts | 변경 이득 작음 |
+
+### 실패 항목 상세
+- **CR-003** (src/services/order.ts): 산탄총 수술 구조 — 자동 수정 불가, 수동 리팩토링 필요
+
+### 다음 단계
+- `git diff`로 변경 내용을 확인하세요
+- 문제가 없으면 커밋하세요
+- 실패 항목은 별도 이슈로 등록을 권장합니다
+```
+
+## 안전 장치
+
+1. **수정 전 사용자 확인 필수** — 수정 계획을 보여주고 승인을 받은 후 진행
+2. **fix_now만 수정** — followup은 절대 건드리지 않음
+3. **Nit 제외** — 스타일 수준의 변경은 자동 수정 대상이 아님
+4. **검증 실행** — 수정 후 구문 오류 확인
+5. **실패 시 롤백 안내** — `git checkout -- {file}`로 복구 가능함을 안내
+
+## 설정
+
+`.harness/code-review.json`의 추가 옵션:
+
+```json
+{
+  "fix": {
+    "auto_confirm": false,
+    "run_lint_after": true,
+    "max_parallel_agents": 5
+  }
+}
+```
+
+- `auto_confirm`: true면 수정 계획 확인 없이 바로 진행 (기본: false)
+- `run_lint_after`: 수정 후 lint/typecheck 자동 실행 (기본: true)
+- `max_parallel_agents`: 동시 생성할 fix-agent 최대 수 (기본: 5)

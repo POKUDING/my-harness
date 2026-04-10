@@ -9,6 +9,7 @@ Personal productivity plugin for Claude Code.
 - `/slack-list-plan` - Slack List에서 작업 계획서 자동 생성
 - `/task-review` - Slack List 미완료 항목 확인 → 코드리뷰 → 완료 처리
 - `/code-review` - 다중 에이전트 합의 기반 코드 리뷰 (PR/diff → 심각도 기반 리포트)
+- `/code-review-fix` - 코드 리뷰 결과의 fix_now 항목을 파일별 병렬 수정
 
 ## Agents
 - `my-harness:researcher` (Sonnet) - Deep codebase research and analysis
@@ -29,11 +30,13 @@ Personal productivity plugin for Claude Code.
 - `performance-agent` (Sonnet) — 성능
 - `maintainability-agent` (Opus) — 유지보수성
 - `report-comparator` (Opus) — 보고서 비교 분석
+- `fix-agent` (Sonnet) — 파일별 finding 수정 실행
 
 **변경 이력:**
 | 날짜 | 변경 내용 | 대상 | 사유 |
 |------|----------|------|------|
 | 2026-04-10 | 초기 구성 | 전체 | 코드 품질/유지보수성 향상을 위한 리뷰 시스템 |
+| 2026-04-10 | fix-agent + code-review-fix 추가 | agents, skills | 리뷰 결과 병렬 자동 수정 |
 
 ## MCP Tools
 - `harness_project_info` - Get structured project metadata (git info, package info, file stats)
