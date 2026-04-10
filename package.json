@@ -1,6 +1,6 @@
 {
   "name": "my-harness",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Personal Claude Code plugin for productivity enhancement",
   "type": "module",
   "main": "dist/mcp-server.js",
