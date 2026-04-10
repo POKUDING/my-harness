@@ -31,7 +31,7 @@ Slack 토큰이 설정되지 않았습니다.
 아래 명령으로 fetch 스크립트를 실행하여 Slack List 데이터를 가져온다.
 
 ```bash
-python3 .claude/skills/slack-list-plan/scripts/fetch_slack_list.py "{{ARGUMENTS}}"
+python3 skills/slack-list-plan/scripts/fetch_slack_list.py "{{ARGUMENTS}}"
 ```
 
 - stdout으로 출력된 JSON을 읽는다.

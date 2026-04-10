@@ -32,7 +32,7 @@ Slack 토큰이 설정되지 않았습니다.
 Slack List에서 최신 데이터를 가져온다:
 
 ```bash
-python3 .claude/skills/slack-list-plan/scripts/fetch_slack_list.py "{{ARGUMENTS}}"
+python3 skills/slack-list-plan/scripts/fetch_slack_list.py "{{ARGUMENTS}}"
 ```
 
 가져온 아이템 중 상태가 **완료가 아닌 항목**을 필터링한다.
