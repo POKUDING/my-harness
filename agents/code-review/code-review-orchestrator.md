@@ -57,6 +57,31 @@ Agent(
 )
 ```
 
+### Step 3.5: 진행률 보고 및 구조 검증
+
+각 감독 에이전트가 완료될 때마다 사용자에게 진행 상황을 보고한다:
+
+```
+[진행] Supervisor A 완료 (1/2)
+  - 반환된 카테고리: correctness, reliability, security, performance, maintainability
+  - findings 수: 12건
+```
+
+**구조 검증** — 각 Supervisor 결과에 대해 다음을 확인한다:
+
+1. **5개 카테고리 완전성 검증**: 결과의 findings에 아래 5개 category가 모두 존재하는지 확인
+   - `correctness`, `reliability`, `security`, `performance`, `maintainability`
+   - 누락된 카테고리가 있으면 → 해당 Supervisor가 서브에이전트를 생성하지 않고 직접 리뷰했을 가능성이 높음
+   - 누락 카테고리를 사용자에게 경고: `[경고] Supervisor A: security 카테고리 누락`
+
+2. **서브에이전트 위임 여부 추정**: findings 수가 비정상적으로 적으면 (3건 미만) 서브에이전트를 생성하지 않았을 가능성 경고
+
+3. **결과 형식 검증**: findings가 JSON 배열이고, 각 finding에 필수 필드(id, title, severity, category, file, problem, recommendation, scope)가 존재하는지 확인
+
+검증 실패 시:
+- 경고를 사용자에게 표시하되, 가용한 결과로 계속 진행
+- 최종 리포트의 metadata에 `"validation_warnings": [...]` 추가
+
 ### Step 4: 비교 분석
 
 두 보고서를 Report Comparator에게 위임:
