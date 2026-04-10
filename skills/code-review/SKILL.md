@@ -46,7 +46,11 @@ Main Session
 1. **PR 번호** (`#123` 또는 숫자) → `gh pr diff {number}`
 2. **diff 범위** (`main..branch`) → `git diff {range}`
 3. **파일/디렉토리** 경로 → 해당 파일들의 `git diff`
-4. **인자 없음** → `git diff main...HEAD`
+4. **인자 없음** → 마지막 코드리뷰 이후의 변경사항을 자동 탐지:
+   - `_reviews/` 디렉토리에서 가장 최근 리뷰 JSON 파일의 `metadata.date`를 확인
+   - 해당 날짜 이후의 커밋을 `git log --after="{date}" --format=%H`로 수집
+   - `git diff {가장 오래된 커밋}^...HEAD`로 diff 생성
+   - `_reviews/`가 없거나 이전 리뷰가 없으면 `git diff main...HEAD`로 fallback
 
 수집할 컨텍스트:
 - diff 내용 전문
