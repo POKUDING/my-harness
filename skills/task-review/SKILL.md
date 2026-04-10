@@ -116,15 +116,37 @@ python3 .claude/skills/slack-list-plan/scripts/fetch_slack_list.py "{{ARGUMENTS}
 
 `APPROVE`를 받은 항목에 대해 작업 내용을 코멘트로 정리한다.
 
+코멘트 작성을 위해 변경사항을 분석한다:
+
+1. **변경된 API 스펙 파악**: diff에서 라우트, 엔드포인트, request/response 스키마, 상태코드 변경을 추출한다.
+   - 새로 추가된 엔드포인트
+   - 변경된 request 파라미터 또는 response 필드
+   - 삭제된 엔드포인트
+2. **변경된 유저 플로우 파악**: diff에서 비즈니스 로직, 조건 분기, 처리 순서 변경을 추출한다.
+   - 새로 추가된 플로우 (예: 이메일 인증 단계 추가)
+   - 변경된 플로우 (예: 결제 전 재고 확인 로직 추가)
+   - 삭제된 플로우
+
 Slack List 아이템에 코멘트를 추가한다:
 
 ```
 [Task Review] 백엔드 작업 완료
-- 변경 파일: src/foo.ts, src/bar.ts
-- 커밋: abc1234 - <커밋 메시지>
-- 리뷰 결과: APPROVE
 - 처리일: YYYY-MM-DD
+- 커밋: abc1234 - <커밋 메시지>
+- 변경 파일: src/foo.ts, src/bar.ts
+- 리뷰 결과: APPROVE
+
+📡 변경된 API 스펙:
+- [추가] POST /api/v1/orders - 주문 생성 엔드포인트
+- [변경] GET /api/v1/users - response에 `role` 필드 추가
+- [삭제] DELETE /api/v1/legacy/... - 레거시 엔드포인트 제거
+
+🔀 변경된 유저 플로우:
+- [추가] 주문 생성 시 재고 확인 → 결제 → 주문 확정 플로우
+- [변경] 로그인 후 이메일 미인증 사용자는 인증 페이지로 리다이렉트
 ```
+
+> API 스펙 또는 유저 플로우 변경이 없는 경우 해당 섹션은 "변경 없음"으로 표기한다.
 
 Slack API 호출:
 ```
