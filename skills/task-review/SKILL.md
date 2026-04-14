@@ -148,42 +148,29 @@ Slack List 아이템에 코멘트를 추가한다:
 
 > API 스펙 또는 유저 플로우 변경이 없는 경우 해당 섹션은 "변경 없음"으로 표기한다.
 
-Slack API 호출:
-```
-POST lists.items.update
-{
-  "list_id": "<list_id>",
-  "item_id": "<item_id>",
-  "item": {
-    "comment": "<위 코멘트>"
-  }
-}
-```
+`update_slack_list.py`의 `--field` 옵션으로 코멘트를 작성한다:
 
-> 참고: `lists.items.update` API가 코멘트를 지원하지 않을 경우, `chat.postMessage`로 관련 채널에 완료 알림을 대신 보낸다.
-
-### Step 5: 백엔드 작업 완료 상태로 변경
-
-APPROVE된 항목의 Slack List 상태를 `백엔드 완료`로 변경한다.
-
-```
-POST lists.items.update
-{
-  "list_id": "<list_id>",
-  "item_id": "<item_id>",
-  "item": {
-    "fields": {
-      "<status_field_id>": "백엔드 완료"
-    }
-  }
-}
+```bash
+# 레코드별 다른 코멘트 작성 (stdin JSON)
+cat <<'EOF' | python3 skills/slack-list-plan/scripts/update_slack_list.py <LIST_ID> --field "백엔드 변경 사항"
+[
+  {"record_id": "Rec...", "value": "[Task Review] 백엔드 작업 완료\n- 처리일: YYYY-MM-DD\n- 커밋: abc1234\n- 변경 파일: src/foo.ts, src/bar.ts\n- 리뷰 결과: APPROVE\n\n📡 변경된 API 스펙:\n- ...\n\n🔀 변경된 유저 플로우:\n- ..."},
+  {"record_id": "Rec...", "value": "[Task Review] 백엔드 작업 완료\n- 처리일: ..."}
+]
+EOF
 ```
 
-상태 필드 ID를 찾기 위해 `lists.items.get` 응답의 필드 구조를 먼저 확인한다.
+### Step 5: 백엔드 배포완료 상태로 변경
 
-> Slack List API에서 직접 상태 변경이 불가능한 경우:
-> 1. 사용자에게 수동 변경을 안내한다.
-> 2. 관련 채널에 완료 메시지를 보내 알린다.
+APPROVE된 항목의 Slack List 상태를 `백엔드 배포완료`로 변경한다.
+
+`update_slack_list.py`의 `--status` 옵션으로 상태를 변경한다 (스키마 조회 및 select 옵션 매칭을 스크립트가 자동 처리):
+
+```bash
+python3 skills/slack-list-plan/scripts/update_slack_list.py <LIST_ID> \
+  --record Rec... Rec... \
+  --status "백엔드 배포완료"
+```
 
 ### Step 6: 최종 요약
 
@@ -195,7 +182,7 @@ POST lists.items.update
 ### 처리 결과
 | # | 요청 내용 | 리뷰 결과 | Slack 상태 |
 |---|----------|----------|-----------|
-| 1 | ...      | APPROVE  | 백엔드 완료 ✅ |
+| 1 | ...      | APPROVE  | 백엔드 배포완료 ✅ |
 | 2 | ...      | REQUEST_CHANGES | 미변경 ⚠️ |
 | 3 | ...      | 미작업    | 미변경 ⏳ |
 
