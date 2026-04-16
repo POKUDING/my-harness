@@ -10,6 +10,9 @@ Personal productivity plugin for Claude Code.
 - `/task-review` - Slack List 미완료 항목 확인 → 코드리뷰 → 완료 처리
 - `/code-review` - 다중 에이전트 합의 기반 코드 리뷰 (PR/diff → 심각도 기반 리포트)
 - `/code-review-fix` - 코드 리뷰 결과의 fix_now 항목을 파일별 병렬 수정
+- `/init-guide` - 프로젝트 분석 → `.harness/guide.md` 가이드 문서 생성/업데이트
+- `/guide-check` - 가이드 vs 현재 코드 비교 → 불일치 항목 확인 및 저장 (히스토리 기반 범위 자동 결정)
+- `/guide-fix` - guide-check 결과의 불일치 항목을 가이드에 반영하고 기록 저장
 
 ## Agents
 - `my-harness:researcher` (Sonnet) - Deep codebase research and analysis

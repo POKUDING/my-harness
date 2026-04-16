@@ -112,7 +112,35 @@ Agent(
 2. 구문 오류 발생 여부 확인 (가능하면 `npx tsc --noEmit` 또는 해당 언어 lint 실행)
 3. 검증 실패 시 사용자에게 경고
 
-### Step 5: 변경 요약 보고
+### Step 5: 결과 저장 및 요약 보고
+
+fix 결과를 파일로 저장한다. 리뷰 JSON 파일명에서 타임스탬프를 추출하여 같은 이름으로 저장한다:
+
+- `{YYYYMMDD_HHmmss}-fix-result.md` — 사람이 읽는 결과 요약
+- `{YYYYMMDD_HHmmss}-fix-result.json` — 기계가 읽는 결과 (CI/CD 연동용)
+
+저장 경로는 원본 리뷰 파일과 동일한 디렉토리 (`.harness/reviews/`).
+
+JSON 형식:
+```json
+{
+  "metadata": {
+    "date": "YYYY-MM-DDTHH:mm:ss",
+    "source_review": "YYYYMMDD_HHmmss-review.json",
+    "total_fix_now": 5,
+    "fixed": 4,
+    "skipped": 3,
+    "failed": 1
+  },
+  "results": [
+    {"id": "CR-001", "severity": "critical", "file": "src/api/users.ts", "status": "fixed"},
+    {"id": "CR-003", "severity": "major",    "file": "src/services/order.ts", "status": "failed", "reason": "아키텍처 변경 필요"},
+    {"id": "CR-005", "severity": "major",    "file": "src/models/user.ts", "status": "skipped", "scope": "followup"}
+  ]
+}
+```
+
+사용자에게 요약을 보여준다:
 
 ```markdown
 ## Code Review Fix 완료
@@ -140,6 +168,10 @@ Agent(
 
 ### 실패 항목 상세
 - **CR-003** (src/services/order.ts): 산탄총 수술 구조 — 자동 수정 불가, 수동 리팩토링 필요
+
+### 저장된 파일
+- `.harness/reviews/YYYYMMDD_HHmmss-fix-result.md`
+- `.harness/reviews/YYYYMMDD_HHmmss-fix-result.json`
 
 ### 다음 단계
 - `git diff`로 변경 내용을 확인하세요
