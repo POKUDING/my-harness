@@ -17,7 +17,7 @@ Slack List 계획서의 미완료 항목을 확인하고, 코드 변경사항을
 
 ## 실행 흐름
 
-### Step 0: 설정 확인
+### Step 0: 설정 확인 및 URL 결정
 
 `.harness/config.env` 파일에서 `SLACK_BOT_TOKEN` 또는 `SLACK_USER_TOKEN`이 있는지 확인한다.
 
@@ -27,12 +27,24 @@ Slack 토큰이 설정되지 않았습니다.
 먼저 /slack-setup 을 실행해 토큰을 저장하세요.
 ```
 
+**사용할 URL 결정 (우선순위 순):**
+1. 인자로 URL이 전달된 경우 → 해당 URL 사용 + `.harness/config.env`의 `SLACK_LIST_URL`을 업데이트
+2. 인자 없음 + `config.env`에 `SLACK_LIST_URL` 존재 → 저장된 URL 사용
+3. 인자 없음 + `SLACK_LIST_URL` 없음 → 사용자에게 URL 입력 요청 후 `config.env`에 저장
+
+URL을 새로 저장/업데이트할 때:
+```bash
+grep -q "^SLACK_LIST_URL=" .harness/config.env \
+  && sed -i '' "s|^SLACK_LIST_URL=.*|SLACK_LIST_URL=<URL>|" .harness/config.env \
+  || echo "SLACK_LIST_URL=<URL>" >> .harness/config.env
+```
+
 ### Step 1: 미완료 요청사항 확인
 
 Slack List에서 최신 데이터를 가져온다:
 
 ```bash
-python3 skills/slack-list-plan/scripts/fetch_slack_list.py "{{ARGUMENTS}}"
+python3 skills/slack-list-plan/scripts/fetch_slack_list.py "<결정된 URL>"
 ```
 
 가져온 아이템 중 상태가 **완료가 아닌 항목**을 필터링한다.
