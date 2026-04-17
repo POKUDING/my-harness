@@ -7,7 +7,9 @@
   "scripts": {
     "build": "tsc && node scripts/bundle-mcp.mjs",
     "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "sync-version": "node scripts/sync-version.mjs",
+    "version": "node scripts/sync-version.mjs && git add .claude-plugin/plugin.json .claude-plugin/marketplace.json"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
