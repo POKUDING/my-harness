@@ -42,6 +42,7 @@ description: "작업 계획서(docs/plans/*-plan.md)를 입력으로 받아 TODO
 - `scope` (`예상 작업 범위` — 영향 파일/모듈)
 - `depends_on` (`선행 조건` — 다른 TODO ID 언급 시 의존성 추출)
 - `completion_criteria`
+- `slack_record_ids` (`Slack record_id` 필드 — 없으면 빈 배열. `/slack-review` 연동에 사용)
 
 **필터 적용:**
 - `--todo` 플래그 → 지정된 TODO만
@@ -217,8 +218,12 @@ JSON 형식:
     }
   ],
   "results": [
-    {"todo_id": "TODO-001", "status": "completed", "files": [...]},
-    ...
+    {
+      "todo_id": "TODO-001",
+      "status": "completed",
+      "slack_record_ids": ["Rec..."],
+      "files_changed": [{"path": "src/integrations/stripe.ts", "action": "created"}]
+    }
   ]
 }
 ```

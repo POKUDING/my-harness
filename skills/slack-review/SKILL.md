@@ -69,19 +69,29 @@ python3 skills/slack-plan/scripts/fetch_slack_list.py "<결정된 URL>"
 
 ### Step 2: 코드 변경 확인
 
-각 미완료 항목에 대해 관련 코드 변경이 있는지 확인한다:
+각 미완료 항목에 대해 관련 코드 변경이 있는지 확인한다.
 
-1. `docs/plans/` 디렉토리에서 관련 계획서(`slack-list-*-plan.md`)를 읽어 TODO 항목과 예상 작업 범위를 파악한다.
-2. 변경 범위 결정 (우선순위 순):
-   - `.harness/reviews/`에서 가장 최근 리뷰 JSON의 `metadata.date`를 읽어 `git log --since="{date}" --oneline`으로 변경 수집
-   - 이전 리뷰가 없으면 `git log --since="2 weeks ago" --oneline` fallback
-   - `git diff`로 실제 변경 내용 확인
-3. 변경된 파일 목록과 커밋 메시지를 미완료 항목의 키워드와 대조한다.
+**매칭 방법 (우선순위 순):**
+
+1. **plan-execute 기록 우선 사용** — `.harness/plans/`에서 가장 최근 `*-execute.json`을 Read:
+   - 각 TODO 결과의 `slack_record_ids`와 Slack 아이템 `record_id`를 직접 매칭
+   - 해당 TODO의 `files_changed` 목록을 그대로 사용 (추측 불필요)
+   - TODO `status`로 진행 상태 바로 판정:
+     - `completed` → **작업됨**
+     - `partial` → **부분 작업**
+     - `failed` → **미작업**
+   - 매칭된 아이템은 fallback 대상에서 제외
+
+2. **Fallback: plan 파일 + git log** — 실행 기록에서 매칭되지 않은 아이템에 한해:
+   - `docs/plans/slack-list-*-plan.md`의 "원문 요청 요약" 테이블에서 `record_id` 컬럼 확인
+   - 해당 아이템과 연결된 TODO의 `예상 작업 범위` 파일 목록 파악
+   - `.harness/reviews/`의 최근 리뷰 이후 `git log --since` + `git diff`로 실제 변경 수집
+   - 파일 목록이 겹치거나 커밋 메시지에 item 키워드가 나타나면 작업됨으로 판정
 
 각 항목별 작업 진행 상태를 판정한다:
-- **작업됨**: 관련 코드 변경이 확인됨
-- **미작업**: 관련 코드 변경 없음
-- **부분 작업**: 일부만 변경됨
+- **작업됨**: plan-execute `completed` 또는 관련 코드 변경 확인
+- **미작업**: 실행 기록/관련 변경 모두 없음
+- **부분 작업**: plan-execute `partial` 또는 일부 파일만 변경됨
 
 결과를 사용자에게 보여준다:
 ```markdown
