@@ -36,17 +36,46 @@ description: "보안 전담 코드 리뷰 에이전트. 인증/인가, 민감정
 
 ### 5. 암호화 / 해시
 - 약한 해시 알고리즘 (MD5, SHA1 for passwords)
-- 약한 난수 생성 (Math.random for security)
+- 약한 난수 생성 (`Math.random` for security)
 - HTTPS 미강제
 
-## severity 기준
+## severity 판정 기준
 
 | severity | 기준 |
 |----------|------|
 | **Critical** | 인증 우회, SQL Injection, RCE 등 즉시 악용 가능 |
 | **Major** | XSS, CSRF, 민감정보 노출 등 조건부 악용 가능 |
 | **Minor** | 보안 모범사례 미준수, 이론적 위험 |
+| **Nit** | 하드닝 제안 수준 (보안 헤더 추가, 로깅 보강 등) |
+
+## scope 판정 기준
+
+| scope | 기준 |
+|-------|------|
+| **fix_now** | 공격 가능성이 실재하거나 미수정 시 확장되는 보안 위험 |
+| **followup** | 기존 코드의 구조적 보안 문제로 별도 작업 필요 |
+
+> Critical/Major 보안 이슈는 거의 항상 `fix_now`다. `followup`은 신중히.
 
 ## 출력 형식
 
-findings 배열로 반환. 각 finding에 `category: "security"` 명시.
+```json
+{
+  "findings": [
+    {
+      "id": "CR-003",
+      "title": "사용자 입력이 직접 SQL에 삽입됨",
+      "severity": "critical",
+      "category": "security",
+      "file": "src/api/users.ts",
+      "symbol": "getUserById",
+      "lines": "42-58",
+      "problem": "request.params.id를 SQL 쿼리 문자열에 직접 보간.",
+      "why": "SQL Injection으로 임의 쿼리 실행 가능.",
+      "impact": "전체 DB 읽기/쓰기 접근, 데이터 유출/삭제.",
+      "recommendation": "파라미터화 쿼리 사용: `db.query('SELECT * FROM users WHERE id = $1', [id])`",
+      "scope": "fix_now"
+    }
+  ]
+}
+```
