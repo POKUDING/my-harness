@@ -5,12 +5,12 @@ Personal productivity plugin for Claude Code.
 ## Skills
 - `/slack-setup` - 프로젝트 단위 API 토큰 설정 (`.harness/config.env`에 저장, gitignored)
 - `/proj-status` - 현재 프로젝트 상태 분석 (git, 파일, 의존성)
-- `/proj-review` - 빠른 단일 에이전트 코드 리뷰 (가벼운 점검). 본격 리뷰는 `/code-review` 사용
-- `/slack-list-plan` - Slack List에서 작업 계획서 자동 생성
-- `/task-review` - Slack List 미완료 항목 확인 → 코드리뷰 → 완료 처리
+- `/code-review-quick` - 빠른 단일 에이전트 코드 리뷰 (가벼운 점검). 본격 리뷰는 `/code-review` 사용
+- `/slack-plan` - Slack List에서 작업 계획서 자동 생성
+- `/slack-review` - Slack List 미완료 항목 확인 → 코드리뷰 → 완료 처리
 - `/code-review` - 다중 에이전트 합의 기반 코드 리뷰 (PR/diff → 심각도 기반 리포트)
 - `/code-review-fix` - 코드 리뷰 결과의 fix_now 항목을 파일별 병렬 수정
-- `/init-guide` - 프로젝트 분석 → `.harness/guide.md` 가이드 문서 생성/업데이트
+- `/guide-init` - 프로젝트 분석 → `.harness/guide.md` 가이드 문서 생성/업데이트
 - `/guide-check` - 가이드 vs 현재 코드 비교 → 불일치 항목 확인 및 저장 (히스토리 기반 범위 자동 결정)
 - `/guide-fix` - guide-check 결과의 불일치 항목을 가이드에 반영하고 기록 저장
 - `/plan-execute` - 작업 계획서(docs/plans/*-plan.md)의 TODO를 의존성 분석 후 병렬 executor로 자동 구현 (ultrawork + ralph 패턴)

@@ -1,5 +1,5 @@
 ---
-name: proj-review
+name: code-review-quick
 description: 스테이징된 변경사항 또는 최근 커밋에 대한 빠른 단일 에이전트 코드 리뷰 (가벼운 체크). 본격 리뷰는 /code-review를 사용한다.
 ---
 

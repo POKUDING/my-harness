@@ -26,7 +26,7 @@ description: "작업 계획서(docs/plans/*-plan.md)를 입력으로 받아 TODO
 3. 파일이 없으면 안내 후 중단:
    ```
    실행할 계획서가 없습니다.
-   먼저 /slack-list-plan을 실행하여 계획서를 생성하거나,
+   먼저 /slack-plan을 실행하여 계획서를 생성하거나,
    docs/plans/에 직접 계획서를 작성하세요.
    ```
 

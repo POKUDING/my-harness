@@ -1,5 +1,5 @@
 ---
-name: slack-list-plan
+name: slack-plan
 description: Slack List URL을 입력받아 아이템을 가져오고 TODO/우선순위/작업 계획서를 자동 생성
 ---
 
@@ -10,7 +10,7 @@ Slack List의 수정요청/작업 아이템을 가져와서 구조화된 작업 
 ## 사용법
 
 ```
-/slack-list-plan <SLACK_LIST_URL 또는 LIST_ID>
+/slack-plan <SLACK_LIST_URL 또는 LIST_ID>
 ```
 
 ## 실행 흐름
@@ -44,7 +44,7 @@ grep -q "^SLACK_LIST_URL=" .harness/config.env \
 아래 명령으로 fetch 스크립트를 실행하여 Slack List 데이터를 가져온다.
 
 ```bash
-python3 skills/slack-list-plan/scripts/fetch_slack_list.py "<결정된 URL>"
+python3 skills/slack-plan/scripts/fetch_slack_list.py "<결정된 URL>"
 ```
 
 - stdout으로 출력된 JSON을 읽는다.
@@ -151,7 +151,7 @@ Slack List의 각 아이템을 원문 그대로 요약한다.
 - 그 외 상태는 모두 `진행중`으로 변경
 
 ```bash
-python3 skills/slack-list-plan/scripts/update_slack_list.py <LIST_ID> \
+python3 skills/slack-plan/scripts/update_slack_list.py <LIST_ID> \
   --record Rec... Rec... \
   --status "진행중"
 ```

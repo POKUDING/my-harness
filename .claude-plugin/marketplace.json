@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "my-harness",
-      "description": "Personal productivity plugin - SessionStart/PreToolUse hooks, /harness-status, /harness-review, /slack-list-plan skills, researcher/quick-fix agents, and harness_project_info MCP tool",
+      "description": "Personal productivity plugin - Slack List 자동 계획서(/slack-plan) + 병렬 구현(/plan-execute) + 다중 에이전트 코드리뷰(/code-review) + Slack 완료 처리(/slack-review) + 가이드 문서 동기화(/guide-*) 워크플로우",
       "version": "0.1.0",
       "author": {
         "name": "POKUDING"

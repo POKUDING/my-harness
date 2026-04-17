@@ -1,5 +1,5 @@
 ---
-name: init-guide
+name: guide-init
 description: "프로젝트를 분석하여 .harness/guide.md 가이드 문서를 생성하거나 최신 작업 내용을 반영하여 업데이트한다."
 ---
 
@@ -10,8 +10,8 @@ description: "프로젝트를 분석하여 .harness/guide.md 가이드 문서를
 ## 사용법
 
 ```
-/init-guide              # 신규 생성 또는 전체 재생성
-/init-guide --update     # 최근 변경 내용을 기존 가이드에 반영
+/guide-init              # 신규 생성 또는 전체 재생성
+/guide-init --update     # 최근 변경 내용을 기존 가이드에 반영
 ```
 
 ## 실행 흐름
@@ -51,7 +51,7 @@ git log --oneline -20
 
 ### Step 2: 변경 분석 (`--update` 시)
 
-`.harness/guide-history.json`에서 마지막 `init-guide` 실행 날짜를 확인한다.
+`.harness/guide-history.json`에서 마지막 `guide-init` 실행 날짜를 확인한다.
 
 ```bash
 git log --oneline --after="{마지막 실행일}" --name-status
