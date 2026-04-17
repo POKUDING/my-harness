@@ -217,22 +217,80 @@ try {
 #### 4-4. 액션별 처리
 
 **[w] 작업 진행:**
-1. state에 `in_progress` 마크 (중단 시 재개 가능)
-2. `my-harness:researcher` 에이전트로 영향 범위 파악 (관련 호출부, 기존 패턴)
-3. 수정 제안 제시 + 유저와 상호작용:
+1. **사전 체크** — `git status --porcelain`으로 작업 트리 확인:
+   - 깨끗함 → 진행
+   - 이 finding 외의 변경사항이 있음 → **경고**:
+     ```
+     ⚠️ 다른 변경사항이 작업 트리에 있습니다:
+       M src/foo.ts
+       M src/bar.ts
+
+     이 상태에서 진행하면 finding 수정 커밋에 관련 없는 변경이 섞일 수 있습니다.
+     [c] 기존 변경 먼저 커밋 후 진행
+     [s] 기존 변경을 stash 후 진행 (수정 후 pop 안내)
+     [i] 무시하고 진행 (finding 수정 파일만 스테이징)
+     [a] 이번 finding 중단
+     ```
+2. state에 `in_progress` 마크 (중단 시 재개 가능)
+3. `my-harness:researcher` 에이전트로 영향 범위 파악 (관련 호출부, 기존 패턴)
+4. 수정 제안 제시 + 유저와 상호작용:
    - 유저가 수정 방향 조정 가능
    - "이 방향으로 해줘" → Edit 도구로 파일 수정
    - "다른 접근은?" → 대안 제시
-4. 수정 완료 후 구문 체크 (`tsc --noEmit` 등)
-5. state 업데이트:
+5. 수정 완료 후 구문 체크 (`tsc --noEmit` 등)
+6. **자동 커밋** (기본 활성화, config로 비활성화 가능):
+   - 이번 수정으로 실제 변경된 파일만 스테이징: `git add -- {files_changed}`
+   - 커밋 메시지 생성 (아래 템플릿) 후 유저에게 미리보기 + 승인 요청:
+     ```
+     ## 커밋 미리보기
+
+     fix(review): CR-005 외부 API 호출에 timeout 미설정
+
+     AbortController로 5s timeout 추가. src/integrations/slack.ts의
+     기존 패턴과 동일하게 적용.
+
+     Review:  .harness/reviews/20260410_143022-review.json
+     Finding: CR-005 (reliability/critical)
+     Files:   src/integrations/payment.ts
+
+     [Y] 그대로 커밋  [e] 메시지 수정  [n] 커밋 건너뛰기
+     ```
+   - 승인 시 `git commit` 실행 (사전 체크 [s] 옵션을 썼다면 stash pop 안내 포함)
+   - config `auto_commit: false`면 이 스텝 생략
+7. state 업데이트:
    ```json
    {
      "status": "done",
      "action": "AbortController + 5s timeout 추가",
      "files_changed": ["src/integrations/payment.ts"],
+     "commit": "abc1234",
      "timestamp": "..."
    }
    ```
+
+### 자동 커밋 메시지 템플릿
+
+```
+fix(review): {FINDING_ID} {title}
+
+{action 요약 1-3줄 — 무엇을 어떻게 바꿨는지}
+
+Review:  .harness/reviews/{review-ts}-review.json
+Finding: {finding.id} ({category}/{severity})
+Files:   {file1}, {file2}, ...
+```
+
+**subject prefix 매핑** (카테고리 → Conventional Commit 타입):
+
+| Category | Prefix |
+|----------|--------|
+| correctness | `fix` |
+| reliability | `fix` |
+| security | `fix` (또는 `security`) |
+| performance | `perf` |
+| maintainability | `refactor` |
+
+수정이 신규 기능을 동반하지 않고 리뷰 지적 해결에 국한되므로 대부분 `fix` 또는 `refactor` 계열.
 
 **[p] 패스:**
 1. 패스 사유 입력 받음: "왜 문제가 아니라고 판단하셨나요? (선택)"
@@ -333,6 +391,7 @@ Step 6로 진행.
       "status": "done",
       "action": "파라미터화 쿼리로 변경",
       "files_changed": ["src/api/users.ts"],
+      "commit": "abc1234",
       "timestamp": "2026-04-17T10:15:00"
     },
     "CR-002": {
@@ -365,6 +424,9 @@ Step 6로 진행.
 2. **비파괴적 상태 변경** — state 업데이트만 하고 기존 review JSON은 변경하지 않음
 3. **종료 시 상태 저장** — `[q]`, Ctrl-C, 에러 발생 모두 최신 state 저장 시도
 4. **리뷰 외 정보 표시** — detected by, confidence, scope 등 JSON의 모든 유용 필드 활용
+5. **커밋 스테이징은 파일 단위 정밀 지정** — `git add -- {files_changed}`만, 절대 `git add -A` 금지 (다른 파일이 섞이지 않도록)
+6. **--no-verify 금지** — 프로젝트 pre-commit 훅은 그대로 실행. 훅 실패 시 커밋 중단 후 유저에게 결과 보고
+7. **커밋 실패 시 롤백 안내** — 구문 체크 실패/훅 실패 시 state는 `done` 마크 안 함, 다음 실행 시 재시도 가능
 
 ## 설정
 
@@ -374,6 +436,13 @@ Step 6로 진행.
 {
   "default_severity_filter": ["critical", "major"],
   "auto_typecheck_after_edit": true,
-  "show_code_snippet_context_lines": 5
+  "show_code_snippet_context_lines": 5,
+  "auto_commit": true,
+  "commit_prefix_override": null,
+  "commit_require_approval": true
 }
 ```
+
+- `auto_commit`: 수정 후 자동 커밋 활성화 (기본: true)
+- `commit_prefix_override`: 카테고리 매핑 대신 고정 prefix 사용 (예: `"fix"`)
+- `commit_require_approval`: 커밋 전 유저 승인 요청 (기본: true, false면 바로 커밋)
