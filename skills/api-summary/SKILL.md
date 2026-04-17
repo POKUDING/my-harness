@@ -1,11 +1,19 @@
 ---
 name: api-summary
-description: "작업 범위에서 새로 추가되거나 변경/삭제된 API 엔드포인트를 자동 파싱하여 신규/수정/삭제로 분류한 Markdown 문서를 생성한다. Express, NestJS, FastAPI, Django REST, Flask 등 주요 프레임워크 자동 감지. API 변경 요약, API 스펙 정리, changelog 요청 시 이 스킬을 사용할 것."
+description: "작업이 끝난 뒤 협업팀과 공유하기 위한 API 변경 요약 문서를 생성하는 스킬. 지정된 범위(또는 최근 작업 커밋)에서 추가/수정/삭제된 API 엔드포인트를 자동 파싱하여 신규/수정/삭제로 분류한 Markdown을 만든다. Express, NestJS, FastAPI, Django REST, Flask 등 자동 감지. API 변경 공유, 팀 공유, 릴리즈 노트, PR 설명, API changelog 요청 시 이 스킬을 사용할 것."
 ---
 
-# API Summary — 작업 범위 API 스펙 변경 요약
+# API Summary — 협업팀 공유용 API 변경 요약
 
-작업 중 추가/수정/삭제된 API 엔드포인트를 자동 파싱하여 요약 문서를 생성한다. PR 설명, Slack 코멘트, 배포 노트 작성에 활용.
+코드 리뷰 반영, 새 기능 구현, 리팩토링 등 **어떤 종류의 작업이든 끝난 뒤** 그 작업으로 발생한 API 변경을 협업팀에 공유할 문서로 정리한다.
+
+**사용 맥락 (독립 스킬, 특정 워크플로우에 종속되지 않음):**
+- PR을 열기 전 PR 설명에 붙일 요약이 필요할 때
+- 프론트엔드/모바일/QA 팀에 Slack으로 공유할 체크리스트가 필요할 때
+- 릴리즈 노트/변경 로그 초안이 필요할 때
+- 외부 소비자(파트너 API 등)에게 breaking change를 고지해야 할 때
+
+원하는 작업이 끝난 **어느 시점에서나** 독립적으로 실행할 수 있다. 특정 스킬 실행 직후에만 쓰는 것이 아니다.
 
 ## 사용법
 
@@ -215,7 +223,6 @@ path 변경 감지:
 - 분석 범위: `<base_sha>..<head_sha>`
 - 커밋 수: 12
 - 파싱된 엔드포인트: base 37개, head 39개
-- 다음 단계: 이 문서를 PR 설명/릴리즈 노트에 활용, `/slack-review`로 Slack 아이템 코멘트
 ```
 
 ### JSON 출력 (`--format json`)
@@ -257,18 +264,25 @@ path 변경 감지:
 }
 ```
 
-### Step 6: 이력 기록 및 체인 제안
+### Step 6: 결과 안내
 
-- 요약 파일 경로를 사용자에게 표시
-- 다음 단계 제안:
-  ```
-  저장: .harness/api-summaries/YYYYMMDD_HHmmss-summary.md
+요약 파일 경로와 활용 힌트를 표시한다. 이 스킬은 체인의 일부가 아니라 **공유 목적의 독립 산출물**을 만드는 스킬이다. 따라서 다음 단계를 강제하지 않는다.
 
-  다음 단계:
-  - PR 설명/릴리즈 노트에 이 내용 복사
-  - /slack-review 에서 이 요약을 Slack 아이템 코멘트로 활용
-  - Breaking change 1건: 클라이언트 팀에 공유 필요
-  ```
+```
+저장: .harness/api-summaries/YYYYMMDD_HHmmss-summary.md
+
+요약 통계:
+  - 신규 3건 / 수정 2건 / 삭제 1건
+  - Breaking change: 1건
+
+이 문서는 다음 용도로 바로 활용할 수 있습니다:
+  - PR 설명: 내용 복사 또는 파일 링크
+  - Slack/Jira 공유: Markdown 블록 그대로 붙여넣기
+  - 릴리즈 노트: `### API 변경` 섹션으로 편입
+  - 외부 소비자 공지: breaking change 항목만 발췌
+```
+
+Breaking change가 있으면 상단에 명시적 경고를 한 번 더 표시한다.
 
 ## 검증 원칙
 

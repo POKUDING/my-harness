@@ -189,7 +189,6 @@ Agent(
 ### 다음 단계
 - `git diff`로 변경 확인
 - `/code-review` 로 리뷰 수행
-- `/api-summary`로 API 변경 요약 생성 (PR 설명/릴리즈 노트용)
 - 통과 시 커밋 → `/slack-review`로 Slack 반영
 ```
 
