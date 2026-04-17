@@ -1,50 +1,57 @@
 ---
 name: proj-review
-description: Structured code review workflow for staged or recent changes
+description: 스테이징된 변경사항 또는 최근 커밋에 대한 빠른 단일 에이전트 코드 리뷰 (가벼운 체크). 본격 리뷰는 /code-review를 사용한다.
 ---
 
-# Code Review Workflow
+# 빠른 코드 리뷰 (Quick Review)
 
-Run a structured code review on staged changes or recent commits.
+스테이징된 변경사항 또는 최근 커밋에 대한 **가벼운 단일 에이전트 리뷰**를 수행한다.
 
-## Review Process
+> **언제 쓰는가?**
+> - 커밋 직전 자가 점검
+> - PR 올리기 전 빠른 확인
+> - 다중 에이전트 합의 리뷰(`/code-review`)는 과하다고 판단될 때
+>
+> **본격 리뷰가 필요한 경우 `/code-review`를 사용한다** (5개 전문 에이전트 × 2 Supervisor 합의).
 
-1. **Identify scope**: Check `git diff --staged` first, fall back to `git diff HEAD~1` if nothing is staged
-2. **Categorize changes**: Group files by type (new, modified, deleted) and domain (src, tests, config)
-3. **Review each file** for:
-   - Logic errors or bugs
-   - Security concerns (hardcoded secrets, injection vectors, unsafe operations)
-   - Performance issues (unnecessary loops, missing memoization, N+1 patterns)
-   - Code style consistency with surrounding code
-   - Missing error handling at system boundaries
-4. **Summary**: Provide an overall assessment
+## 리뷰 프로세스
 
-## Output Format
+1. **범위 파악**: 먼저 `git diff --staged`를 확인하고, 비어있으면 `git diff HEAD~1`로 fallback
+2. **변경 분류**: 파일을 타입(신규/수정/삭제)과 도메인(src/tests/config)으로 묶는다
+3. **각 파일 리뷰** 관점:
+   - 로직 오류 또는 버그
+   - 보안 우려 (하드코딩된 시크릿, injection 벡터, 안전하지 않은 연산)
+   - 성능 이슈 (불필요한 반복, 누락된 memoization, N+1 패턴)
+   - 주변 코드와의 스타일 일관성
+   - 시스템 경계에서 누락된 에러 처리
+4. **종합 판정**
 
-```
-## Code Review
+## 출력 형식
 
-### Scope
-- Files changed: {count}
-- Lines added/removed: +{added} / -{removed}
+```markdown
+## 빠른 코드 리뷰
 
-### Findings
+### 범위
+- 변경 파일: {count}개
+- 추가/삭제: +{added} / -{removed}
+
+### 발견 사항
 
 #### 🔴 Critical
-- {blocking issues that must be fixed}
+- {반드시 고쳐야 하는 블로킹 이슈}
 
-#### 🟡 Suggestions
-- {improvements that would be nice}
+#### 🟡 Suggestion
+- {개선하면 좋을 항목}
 
-#### 🟢 Good
-- {things done well}
+#### 🟢 좋음
+- {잘 작성된 부분}
 
 ### Verdict: {APPROVE | REQUEST_CHANGES | NEEDS_DISCUSSION}
 ```
 
-## Instructions
+## 작업 원칙
 
-- Be specific: reference file paths and line numbers
-- Don't nitpick style unless it hurts readability
-- Focus on correctness and security first
-- If no issues found, say so clearly — don't invent problems
+- 구체적으로: 파일 경로와 라인 번호를 인용한다
+- 가독성을 해치지 않는 이상 스타일 nitpick 금지
+- 정확성과 보안을 최우선
+- 이슈가 없으면 "이슈 없음"이라고 명확히 말한다. 억지로 문제를 만들지 않는다

@@ -49,7 +49,7 @@ python3 skills/slack-list-plan/scripts/fetch_slack_list.py "<결정된 URL>"
 
 가져온 아이템 중 상태가 **완료가 아닌 항목**을 필터링한다.
 - 상태 컬럼 이름은 `status`, `상태`, `state` 등 다양할 수 있으므로 유연하게 매칭한다.
-- 완료로 간주하는 값: `완료`, `done`, `complete`, `completed`, `백엔드 완료`, `BE 완료`
+- 완료로 간주하는 값: `완료`, `done`, `complete`, `completed`, `백엔드 배포완료`, `이슈아님`
 - 그 외 모든 값은 미완료로 간주한다.
 
 미완료 항목이 없으면:
@@ -72,7 +72,10 @@ python3 skills/slack-list-plan/scripts/fetch_slack_list.py "<결정된 URL>"
 각 미완료 항목에 대해 관련 코드 변경이 있는지 확인한다:
 
 1. `docs/plans/` 디렉토리에서 관련 계획서(`slack-list-*-plan.md`)를 읽어 TODO 항목과 예상 작업 범위를 파악한다.
-2. `git log --oneline --since="2 weeks ago"` 및 `git diff main...HEAD`로 최근 변경 사항을 확인한다.
+2. 변경 범위 결정 (우선순위 순):
+   - `.harness/reviews/`에서 가장 최근 리뷰 JSON의 `metadata.date`를 읽어 `git log --since="{date}" --oneline`으로 변경 수집
+   - 이전 리뷰가 없으면 `git log --since="2 weeks ago" --oneline` fallback
+   - `git diff`로 실제 변경 내용 확인
 3. 변경된 파일 목록과 커밋 메시지를 미완료 항목의 키워드와 대조한다.
 
 각 항목별 작업 진행 상태를 판정한다:
@@ -94,16 +97,14 @@ python3 skills/slack-list-plan/scripts/fetch_slack_list.py "<결정된 URL>"
 
 ### Step 3: 코드리뷰 진행
 
-작업됨으로 판정된 각 항목에 대해 `/proj-review` 스킬과 동일한 기준으로 코드리뷰를 수행한다:
+작업됨으로 판정된 항목 전체에 대해 `/code-review` 스킬을 호출하여 다중 에이전트 리뷰를 수행한다.
 
-1. 해당 항목과 관련된 파일의 변경사항(`git diff`)을 대상으로 리뷰
-2. 리뷰 기준:
-   - Logic errors or bugs
-   - Security concerns
-   - Performance issues
-   - Code style consistency
-   - Missing error handling at system boundaries
-3. 각 항목별 verdict 판정: `APPROVE` | `REQUEST_CHANGES` | `NEEDS_DISCUSSION`
+1. 관련 변경사항의 diff 범위를 `/code-review`에 전달 (Step 2에서 결정된 범위)
+2. `/code-review`가 `.harness/reviews/{YYYYMMDD_HHmmss}-review.json`을 생성할 때까지 대기
+3. 생성된 리뷰 JSON의 findings를 항목별로 매핑하여 verdict를 판정한다:
+   - **APPROVE**: 해당 항목 관련 파일에 `critical`/`major` severity 없음
+   - **REQUEST_CHANGES**: `critical` 또는 `major` severity + `scope: fix_now` 존재
+   - **NEEDS_DISCUSSION**: `major` severity + `scope: followup` 또는 판정 애매
 
 결과를 사용자에게 보여준다:
 ```markdown

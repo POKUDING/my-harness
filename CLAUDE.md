@@ -3,9 +3,9 @@
 Personal productivity plugin for Claude Code.
 
 ## Skills
-- `/slack-setup` - Configure project-level API tokens (saved to `.harness/config.env`, gitignored)
-- `/proj-status` - Analyze current project status (git, files, dependencies)
-- `/proj-review` - Run a structured code review workflow
+- `/slack-setup` - 프로젝트 단위 API 토큰 설정 (`.harness/config.env`에 저장, gitignored)
+- `/proj-status` - 현재 프로젝트 상태 분석 (git, 파일, 의존성)
+- `/proj-review` - 빠른 단일 에이전트 코드 리뷰 (가벼운 점검). 본격 리뷰는 `/code-review` 사용
 - `/slack-list-plan` - Slack List에서 작업 계획서 자동 생성
 - `/task-review` - Slack List 미완료 항목 확인 → 코드리뷰 → 완료 처리
 - `/code-review` - 다중 에이전트 합의 기반 코드 리뷰 (PR/diff → 심각도 기반 리포트)
