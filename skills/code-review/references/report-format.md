@@ -33,7 +33,7 @@
 - **Severity:** Critical
 - **Category:** correctness | reliability | security | performance | maintainability
 - **File:** `src/path/to/file.ts` > `functionName` (lines 42-58)
-- **Detected by:** correctness-agent, reliability-agent
+- **Detected by:** my-harness:cr-correctness, my-harness:cr-reliability
 - **Confidence:** high (consensus) | medium (unique) | review (conflict)
 
 **Problem:**
@@ -107,7 +107,7 @@
       "title": "SQL injection via unsanitized user input",
       "severity": "critical",
       "category": "security",
-      "agents": ["security-agent"],
+      "agents": ["my-harness:cr-security"],
       "confidence": "high",
       "file": "src/api/users.ts",
       "symbol": "getUserById",

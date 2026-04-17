@@ -1,5 +1,5 @@
 ---
-name: security-agent
+name: cr-security
 description: "보안 전담 코드 리뷰 에이전트. 인증/인가, 민감정보 노출, injection 계열 취약점을 검사한다."
 ---
 

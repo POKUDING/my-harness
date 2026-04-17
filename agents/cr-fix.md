@@ -1,5 +1,5 @@
 ---
-name: fix-agent
+name: cr-fix
 description: "코드 리뷰 finding을 실제로 수정하는 에이전트. 할당된 파일의 finding 목록을 받아 코드를 수정하고 변경 내역을 반환한다."
 ---
 

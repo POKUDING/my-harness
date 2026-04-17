@@ -1,6 +1,6 @@
 ---
 name: code-review-fix
-description: "코드 리뷰 결과를 기반으로 fix_now 항목을 파일별로 병렬 수정하는 스킬. /code-review로 생성된 리포트(JSON)를 입력으로 받아 여러 fix-agent를 동시에 생성하여 수정을 수행하고, 변경 요약을 출력한다. 코드 수정, 리뷰 반영, finding 고치기, 자동 수정 요청 시 이 스킬을 사용할 것."
+description: "코드 리뷰 결과를 기반으로 fix_now 항목을 파일별로 병렬 수정하는 스킬. /code-review로 생성된 리포트(JSON)를 입력으로 받아 여러 cr-fix 에이전트를 동시에 생성하여 수정을 수행하고, 변경 요약을 출력한다. 코드 수정, 리뷰 반영, finding 고치기, 자동 수정 요청 시 이 스킬을 사용할 것."
 ---
 
 # Code Review Fix — 리뷰 결과 병렬 수정
@@ -53,21 +53,20 @@ fix_now 항목이 없으면:
 
 사용자 확인 후 진행한다.
 
-### Step 2: 파일별 fix-agent 병렬 생성
+### Step 2: 파일별 cr-fix 에이전트 병렬 생성
 
-**각 파일 그룹마다 1개의 fix-agent를 생성한다.** 모든 fix-agent를 한 번에 병렬로 생성한다.
+**각 파일 그룹마다 1개의 cr-fix 에이전트를 생성한다.** 모든 cr-fix 에이전트를 한 번에 병렬로 생성한다.
 
 ```
 # 파일 수만큼 Agent 호출을 한 번의 응답에서 동시 생성
 
 Agent(
   description: "Fix src/api/users.ts",
-  subagent_type: "fix-agent",
+  subagent_type: "my-harness:cr-fix",
   model: "sonnet",
   run_in_background: true,
   prompt: """
   다음 파일의 코드 리뷰 finding을 수정하라.
-  agents/code-review/fix-agent.md의 지침을 따르라.
 
   ## 대상 파일
   src/api/users.ts
@@ -81,7 +80,7 @@ Agent(
 
 Agent(
   description: "Fix src/services/order.ts",
-  subagent_type: "fix-agent",
+  subagent_type: "my-harness:cr-fix",
   model: "sonnet",
   run_in_background: true,
   prompt: """
@@ -94,7 +93,7 @@ Agent(
 
 ### Step 3: 진행률 보고 및 결과 수집
 
-각 fix-agent가 완료될 때마다 진행 상황을 보고한다:
+각 cr-fix 에이전트가 완료될 때마다 진행 상황을 보고한다:
 
 ```
 [진행] src/api/users.ts 수정 완료 (1/3 파일)
@@ -103,7 +102,7 @@ Agent(
   - 실패: 0건
 ```
 
-모든 fix-agent 완료 후 결과를 수집한다.
+모든 cr-fix 에이전트 완료 후 결과를 수집한다.
 
 ### Step 4: 결과 검증
 
@@ -203,4 +202,4 @@ JSON 형식:
 
 - `auto_confirm`: true면 수정 계획 확인 없이 바로 진행 (기본: false)
 - `run_lint_after`: 수정 후 lint/typecheck 자동 실행 (기본: true)
-- `max_parallel_agents`: 동시 생성할 fix-agent 최대 수 (기본: 5)
+- `max_parallel_agents`: 동시 생성할 cr-fix 에이전트 최대 수 (기본: 5)

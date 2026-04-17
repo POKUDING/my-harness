@@ -1,5 +1,5 @@
 ---
-name: review-supervisor
+name: cr-supervisor
 description: "코드 리뷰 감독 에이전트. 5개 전문 서브에이전트(Correctness, Reliability, Security, Performance, Maintainability)를 생성하여 리뷰를 수행하고 결과를 통합한다."
 ---
 
@@ -23,44 +23,52 @@ description: "코드 리뷰 감독 에이전트. 5개 전문 서브에이전트(
 ```
 Agent(
   description: "Correctness review",
-  subagent_type: "correctness-agent",
+  subagent_type: "my-harness:cr-correctness",
   model: "sonnet",
   run_in_background: true,
-  prompt: "다음 diff를 정확성 관점에서 리뷰하라. agents/code-review/correctness-agent.md의 지침을 따르라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라."
+  prompt: "아래 diff를 정확성 관점에서 리뷰하라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라. 각 finding에는 id, title, severity, category('correctness'), file, lines, problem, why, impact, recommendation, scope 필드를 포함하라."
 )
 
 Agent(
   description: "Reliability review",
-  subagent_type: "reliability-agent",
+  subagent_type: "my-harness:cr-reliability",
   model: "sonnet",
   run_in_background: true,
-  prompt: "다음 diff를 안정성 관점에서 리뷰하라. agents/code-review/reliability-agent.md의 지침을 따르라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라."
+  prompt: "아래 diff를 안정성 관점에서 리뷰하라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라. 각 finding에는 id, title, severity, category('reliability'), file, lines, problem, why, impact, recommendation, scope 필드를 포함하라."
 )
 
 Agent(
   description: "Security review",
-  subagent_type: "security-agent",
+  subagent_type: "my-harness:cr-security",
   model: "sonnet",
   run_in_background: true,
-  prompt: "다음 diff를 보안 관점에서 리뷰하라. agents/code-review/security-agent.md의 지침을 따르라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라."
+  prompt: "아래 diff를 보안 관점에서 리뷰하라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라. 각 finding에는 id, title, severity, category('security'), file, lines, problem, why, impact, recommendation, scope 필드를 포함하라."
 )
 
 Agent(
   description: "Performance review",
-  subagent_type: "performance-agent",
+  subagent_type: "my-harness:cr-performance",
   model: "sonnet",
   run_in_background: true,
-  prompt: "다음 diff를 성능 관점에서 리뷰하라. agents/code-review/performance-agent.md의 지침을 따르라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라."
+  prompt: "아래 diff를 성능 관점에서 리뷰하라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라. 각 finding에는 id, title, severity, category('performance'), file, lines, problem, why, impact, recommendation, scope 필드를 포함하라."
 )
 
 Agent(
   description: "Maintainability review",
-  subagent_type: "maintainability-agent",
+  subagent_type: "my-harness:cr-maintainability",
   model: "opus",
   run_in_background: true,
-  prompt: "다음 diff를 유지보수성 관점에서 리뷰하라. agents/code-review/maintainability-agent.md의 지침을 따르라. skills/code-review/references/maintainability-rules.md도 참조하라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라."
+  prompt: "아래 diff를 유지보수성 관점에서 리뷰하라. skills/code-review/references/maintainability-rules.md를 참조하라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라. 각 finding에는 id, title, severity, category('maintainability'), file, lines, problem, why, impact, recommendation, scope 필드를 포함하라."
 )
 ```
+
+### Step 1.5: 생성 검증
+
+**자기 검증:** Step 1에서 Agent 도구를 정확히 5번 호출했는지 확인한다.
+
+- 5개 미만이면 → **누락된 에이전트를 즉시 추가 생성한다**
+- 필수 카테고리: `correctness`, `reliability`, `security`, `performance`, `maintainability`
+- 이 검증을 건너뛰는 것은 금지된다
 
 ### Step 2: 5개 결과 수집 대기
 
@@ -103,7 +111,7 @@ Agent(
       "title": "...",
       "severity": "critical|major|minor|nit",
       "category": "correctness|reliability|security|performance|maintainability",
-      "agents": ["correctness-agent", "..."],
+      "agents": ["my-harness:cr-correctness", "..."],
       "file": "src/foo.ts",
       "symbol": "functionName",
       "lines": "42-58",

@@ -1,5 +1,5 @@
 ---
-name: maintainability-agent
+name: cr-maintainability
 description: "유지보수성 전담 코드 리뷰 에이전트. SOLID, 함수 분리, 중복 코드, 결합도, 변경 용이성, 테스트 용이성을 중점적으로 검사한다. 과도한 추상화를 강요하지 않으며 실용적 판단을 우선한다."
 ---
 

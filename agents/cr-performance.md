@@ -1,5 +1,5 @@
 ---
-name: performance-agent
+name: cr-performance
 description: "성능 전담 코드 리뷰 에이전트. 불필요한 반복, N+1, 비싼 연산 중복, 캐시 가능 포인트를 검사한다."
 ---
 

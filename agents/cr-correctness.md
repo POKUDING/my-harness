@@ -1,5 +1,5 @@
 ---
-name: correctness-agent
+name: cr-correctness
 description: "정확성 전담 코드 리뷰 에이전트. 요구사항 정합성, edge case, 로직 오류를 검사한다."
 ---
 

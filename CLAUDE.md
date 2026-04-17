@@ -25,21 +25,22 @@ Personal productivity plugin for Claude Code.
 **트리거:** 코드 리뷰, PR 리뷰, diff 리뷰 요청 시 `/code-review` 스킬을 사용하라.
 
 **에이전트:**
-- `code-review-orchestrator` (Opus) — 메인 오케스트레이터
-- `review-supervisor` (Opus) — 리뷰 감독 (A/B 독립 운용)
-- `correctness-agent` (Sonnet) — 정확성
-- `reliability-agent` (Sonnet) — 안정성
-- `security-agent` (Sonnet) — 보안
-- `performance-agent` (Sonnet) — 성능
-- `maintainability-agent` (Opus) — 유지보수성
-- `report-comparator` (Opus) — 보고서 비교 분석
-- `fix-agent` (Sonnet) — 파일별 finding 수정 실행
+- `my-harness:cr-orchestrator` (Opus) — 메인 오케스트레이터
+- `my-harness:cr-supervisor` (Opus) — 리뷰 감독 (A/B 독립 운용)
+- `my-harness:cr-correctness` (Sonnet) — 정확성
+- `my-harness:cr-reliability` (Sonnet) — 안정성
+- `my-harness:cr-security` (Sonnet) — 보안
+- `my-harness:cr-performance` (Sonnet) — 성능
+- `my-harness:cr-maintainability` (Opus) — 유지보수성
+- `my-harness:cr-report-comparator` (Opus) — 보고서 비교 분석
+- `my-harness:cr-fix` (Sonnet) — 파일별 finding 수정 실행
 
 **변경 이력:**
 | 날짜 | 변경 내용 | 대상 | 사유 |
 |------|----------|------|------|
 | 2026-04-10 | 초기 구성 | 전체 | 코드 품질/유지보수성 향상을 위한 리뷰 시스템 |
 | 2026-04-10 | fix-agent + code-review-fix 추가 | agents, skills | 리뷰 결과 병렬 자동 수정 |
+| 2026-04-17 | 에이전트를 `agents/` 플랫 구조로 이동, `cr-` prefix 적용 | agents | 플러그인 네이티브 `subagent_type` 등록 |
 
 ## MCP Tools
 - `harness_project_info` - Get structured project metadata (git info, package info, file stats)

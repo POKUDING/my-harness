@@ -1,5 +1,5 @@
 ---
-name: reliability-agent
+name: cr-reliability
 description: "안정성 전담 코드 리뷰 에이전트. 에러 처리, 상태 관리, null/undefined, race condition, retry/timeout을 검사한다."
 ---
 

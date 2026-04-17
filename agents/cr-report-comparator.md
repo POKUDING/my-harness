@@ -1,5 +1,5 @@
 ---
-name: report-comparator
+name: cr-report-comparator
 description: "코드 리뷰 보고서 비교 분석 에이전트. 두 감독 에이전트(A, B)의 독립 리뷰 결과를 비교하여 합의점, 고유 발견, 충돌 의견을 정리한다."
 ---
 
