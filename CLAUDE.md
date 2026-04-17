@@ -15,6 +15,7 @@ Personal productivity plugin for Claude Code.
 - `/guide-check` - 가이드 vs 현재 코드 비교 → 불일치 항목 확인 및 저장 (히스토리 기반 범위 자동 결정)
 - `/guide-fix` - guide-check 결과의 불일치 항목을 가이드에 반영하고 기록 저장
 - `/plan-execute` - 작업 계획서(docs/plans/*-plan.md)의 TODO를 의존성 분석 후 병렬 executor로 자동 구현 (ultrawork + ralph 패턴)
+- `/api-summary` - 작업 범위의 API 변경(신규/수정/삭제)을 자동 파싱하여 Markdown 요약 문서 생성 (Express/NestJS/FastAPI/Django REST/Flask 등 자동 감지)
 
 ## Agents
 - `my-harness:researcher` (Sonnet) - Deep codebase research and analysis
