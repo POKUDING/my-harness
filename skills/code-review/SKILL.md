@@ -138,8 +138,8 @@ Agent(
 
 1. findings를 severity 순으로 정렬 (Critical → Major → Minor → Nit)
 2. 각 finding에 confidence 레벨 부여 (high/medium/review)
-3. **Markdown 리포트** 생성 — `_reviews/{YYYYMMDD_HHmmss}-review.md`
-4. **JSON 리포트** 생성 — `_reviews/{YYYYMMDD_HHmmss}-review.json`
+3. **Markdown 리포트** 생성 — `.harness/reviews/{YYYYMMDD_HHmmss}-review.md`
+4. **JSON 리포트** 생성 — `.harness/reviews/{YYYYMMDD_HHmmss}-review.json`
 
 출력 형식 상세: `references/report-format.md` 참조
 
