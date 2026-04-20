@@ -194,6 +194,32 @@ Markdown 리포트에도 "## Agent Execution Trace" 섹션 추가:
 echo "{\"event\":\"orchestrator_end\",\"time\":\"$(date -Iseconds)\"}" >> "$TRACE"
 ```
 
+### Step 6: 호출자에게 구조화된 응답 반환
+
+이 에이전트는 `/code-review` 스킬에 의해 백그라운드로 스폰된다. 모든 작업이 끝나면 메인 세션이 소비할 수 있는 **간결한 JSON 요약**을 반환한다. 중간 산출물(diff, supervisor 결과, finding 전문 등)은 절대 반환하지 않는다 — 메인 컨텍스트 오염을 피하기 위함.
+
+반환 형식:
+```json
+{
+  "review_dir": ".harness/reviews/{TS}-{SUM}/",
+  "review_md": ".harness/reviews/{TS}-{SUM}/{TS}-{SUM}-review.md",
+  "review_json": ".harness/reviews/{TS}-{SUM}/{TS}-{SUM}-review.json",
+  "trace_file": ".harness/reviews/{TS}-{SUM}/{TS}-{SUM}-trace.jsonl",
+  "summary": {
+    "total": 12,
+    "critical": 1,
+    "major": 4,
+    "minor": 5,
+    "nit": 2
+  },
+  "consensus_rate": 0.67,
+  "execution_trace_ok": true,
+  "validation_warnings": []
+}
+```
+
+Supervisor 중 하나라도 trace 검증 실패 시 `execution_trace_ok: false`로 설정하고 `validation_warnings`에 구체 사유 기록.
+
 ## 출력 구조
 
 모든 산출물은 한 폴더에 묶인다:
