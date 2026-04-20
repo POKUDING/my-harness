@@ -1,6 +1,14 @@
 ---
 name: cr-supervisor
 description: "코드 리뷰 감독 에이전트. 5개 전문 서브에이전트(Correctness, Reliability, Security, Performance, Maintainability)를 생성하여 리뷰를 수행하고 결과를 통합한다."
+tools:
+  - Read
+  - Bash
+  - Task(cr-correctness)
+  - Task(cr-reliability)
+  - Task(cr-security)
+  - Task(cr-performance)
+  - Task(cr-maintainability)
 ---
 
 # Review Supervisor — 코드 리뷰 감독 에이전트

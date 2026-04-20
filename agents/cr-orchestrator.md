@@ -1,6 +1,16 @@
 ---
 name: cr-orchestrator
 description: "코드 리뷰 하네스의 메인 오케스트레이터. PR diff를 분석하고 2개의 리뷰 감독 에이전트를 병렬 실행한 뒤, 비교 분석을 거쳐 최종 리뷰 리포트를 생성한다."
+tools:
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - Bash
+  - Task(cr-supervisor)
+  - Task(cr-report-comparator)
+  - TodoWrite
 ---
 
 # Code Review Orchestrator
