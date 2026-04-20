@@ -4,11 +4,17 @@ description: "코드 리뷰 감독 에이전트. 5개 전문 서브에이전트(
 tools:
   - Read
   - Bash
+  - Task
   - Task(cr-correctness)
   - Task(cr-reliability)
   - Task(cr-security)
   - Task(cr-performance)
   - Task(cr-maintainability)
+  - Task(my-harness:cr-correctness)
+  - Task(my-harness:cr-reliability)
+  - Task(my-harness:cr-security)
+  - Task(my-harness:cr-performance)
+  - Task(my-harness:cr-maintainability)
 ---
 
 # Review Supervisor — 코드 리뷰 감독 에이전트
