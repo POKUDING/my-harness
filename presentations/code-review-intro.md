@@ -26,14 +26,12 @@ Claude Code 플러그인으로 `/code-review` 한 번에 실행.
 
 ---
 
-## 3. 아키텍처 — Fork 1회 + 내부 Spawn으로 병렬 조율
+## 3. 아키텍처 — Spawn 계층 구조
 
 ```
-Main Session (thin wrapper)
+Main Session
   │
-  └─ ⭐ Fork → cr-orchestrator (격리된 컨텍스트, 메인 타임라인에서 분기)
-               │
-               │  ↓ 이하는 orchestrator가 내부에서 Spawn으로 병렬 조율
+  └─ Spawn → cr-orchestrator (격리된 컨텍스트, 메인은 오염되지 않음)
                │
                ├─ Spawn → cr-supervisor-a ──┐
                │           └─ Spawn → 5 전문 에이전트 (병렬)
@@ -43,16 +41,11 @@ Main Session (thin wrapper)
                            └─ 최종 리포트
 ```
 
-### 용어 구분 (개념적 구분, 기술적으로는 같은 메커니즘)
+### Spawn 메커니즘
 
-| 경계 | 용어 | 의미 |
-|------|------|------|
-| Main → Orchestrator | **Fork** | 메인 대화 타임라인에서 **분기** — 메인은 오염되지 않고, 리뷰 작업은 독립 경로로 진행 |
-| Orchestrator 내부 | **Spawn** | 워커 에이전트 **생성** — 병렬 실행을 위한 위임, 결과를 부모에게 반환 |
+모든 에이전트 생성은 `Agent(run_in_background: true)` 동일 API로 이뤄진다. Claude Code가 새 Claude 인스턴스를 **빈 컨텍스트**(에이전트 정의 + 프롬프트만 보유)로 띄우고, 부모 컨텍스트는 복사하지 않는다. 에이전트의 중간 산출물도 부모로 역전파되지 않고 최종 결과만 반환한다.
 
-**기술적 참고:** Fork와 Spawn 모두 내부적으로 `Agent(run_in_background: true)` 호출이다. Unix `fork()`처럼 부모 상태를 복사하지 않고, 새 Claude 인스턴스가 에이전트 정의 + 프롬프트만 가지고 시작한다. 둘의 구분은 "격리 경계로서의 의미"이지 호출 API 차이는 아니다.
-
-**핵심:** 격리 Fork는 Main↔Orchestrator 한 번뿐. 내부의 Spawn은 orchestrator의 병렬 실행 구현 세부사항이며, 메인 세션의 관심사가 아니다.
+**결과:** Main → Orchestrator Spawn이 **격리 경계**로 동작한다. 메인 세션은 diff·supervisor 결과·리포트 등으로 오염되지 않고, orchestrator의 반환 JSON만 받는다.
 
 ---
 
@@ -100,22 +93,22 @@ Main Session (thin wrapper)
 
 ---
 
-## 7. Fork-First 설계 — 단 한 번의 Fork로 메인 컨텍스트 보호
+## 7. Spawn 격리 설계 — 메인 컨텍스트 보호
 
 ```
 ❌ Before: 모든 로직이 메인 세션에서 실행
    → diff + supervisor 결과 + 리포트 = 메인 컨텍스트 폭발
 
-✅ After: cr-orchestrator 한 번 Fork
+✅ After: cr-orchestrator를 메인에서 Spawn (격리 컨텍스트)
    → 메인은 {paths, summary JSON}만 받음
-   → orchestrator 내부에서 Spawn으로 병렬 조율은 자체 해결
+   → orchestrator 내부에서 supervisor/전문가를 다시 Spawn하여 병렬 처리
 ```
 
 **메인 세션 유지비용**:
 - Before: 큰 PR 1회 리뷰로 주 컨텍스트 소진
 - After: 큰 PR이어도 메인 세션은 정상 유지, 다른 작업 병행 가능
 
-**중요:** Fork는 타임라인 분기(메인 ↔ 리뷰 작업), Spawn은 작업 내부의 병렬 워커 생성. 이 둘을 구분하는 것이 설계의 핵심.
+**핵심:** Main → Orchestrator Spawn이 격리 경계. Orchestrator 내부의 Spawn들은 병렬 구현 세부사항이며 메인 세션과 무관하다.
 
 ---
 
@@ -249,7 +242,7 @@ Files:   src/integrations/payment.ts
 | 깊이 | 스타일 중심 | 영역별 전문 프롬프트 |
 | 검증 | 결과만 | Trace 로깅으로 실행 증명 |
 | 후속 작업 | 리포트 생성에서 끝 | walk(대화) + fix(자동) 통합 |
-| 컨텍스트 | 메인 세션 오염 | Fork-first 격리 |
+| 컨텍스트 | 메인 세션 오염 | Spawn 격리 |
 | 산출물 | 단일 파일 | 폴더 단위 (리포트+trace+fix 기록) |
 
 ---
@@ -332,7 +325,7 @@ Files:   src/integrations/payment.ts
 
 ## 20. 요약 슬라이드
 
-- **이중 독립 × 5 전문가 × Fork-first 격리**로 신뢰도 높은 리뷰
+- **이중 독립 × 5 전문가 × Spawn 격리**로 신뢰도 높은 리뷰
 - **Trace 로깅**으로 실행 증명
 - **대화형 / 자동 수정 / 자동 커밋**까지 하나의 워크플로우
 - **확장 가능** — 새 영역 전문가 추가 · 설정으로 커스터마이징
