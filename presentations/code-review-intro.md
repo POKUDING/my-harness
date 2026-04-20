@@ -26,27 +26,31 @@ Claude Code 플러그인으로 `/code-review` 한 번에 실행.
 
 ---
 
-## 3. 아키텍처 — 4단계 Fork
+## 3. 아키텍처 — Fork 1회 + 내부 Spawn으로 병렬 조율
 
 ```
 Main Session (thin wrapper)
-  └─ Agent(cr-orchestrator)                    ← Fork ①
-      │
-      ├─ Agent(cr-supervisor-a)                ← Fork ②
-      │   ├─ Agent(cr-correctness)             ← Fork ③
-      │   ├─ Agent(cr-reliability)
-      │   ├─ Agent(cr-security)
-      │   ├─ Agent(cr-performance)
-      │   └─ Agent(cr-maintainability)
-      │
-      ├─ Agent(cr-supervisor-b)                ← Fork ②
-      │   └─ (독립적으로 같은 5개 재실행)
-      │
-      └─ Agent(cr-report-comparator)           ← Fork ④
-          └─ 최종 리포트
+  │
+  └─ ⭐ Fork → cr-orchestrator (격리된 컨텍스트, 메인 타임라인에서 분기)
+               │
+               │  ↓ 이하는 orchestrator가 내부에서 Spawn으로 병렬 조율
+               │
+               ├─ Spawn → cr-supervisor-a ──┐
+               │           └─ Spawn → 5 전문 에이전트 (병렬)
+               ├─ Spawn → cr-supervisor-b ──┤  A/B 동시 실행
+               │           └─ Spawn → 5 전문 에이전트 (병렬)
+               └─ Spawn → cr-report-comparator
+                           └─ 최종 리포트
 ```
 
-**각 단계가 독립 컨텍스트에서 실행** → 메인 세션은 오염되지 않고, 에이전트 간 독립성 보장.
+### 용어 구분
+
+| 경계 | 용어 | 의미 |
+|------|------|------|
+| Main → Orchestrator | **Fork** | 메인 대화 타임라인에서 **분기** — 메인은 오염되지 않고, 리뷰 작업은 독립 경로로 진행 |
+| Orchestrator 내부 | **Spawn** | 워커 에이전트 **생성** — 병렬 실행을 위한 위임, 결과를 부모에게 반환 |
+
+**핵심:** 격리 Fork는 Main↔Orchestrator 한 번뿐. 내부의 Spawn은 orchestrator의 병렬 실행 구현 세부사항이며, 메인 세션의 관심사가 아니다.
 
 ---
 
@@ -94,19 +98,22 @@ Main Session (thin wrapper)
 
 ---
 
-## 7. Fork-First 설계 — 컨텍스트 보호
+## 7. Fork-First 설계 — 단 한 번의 Fork로 메인 컨텍스트 보호
 
 ```
 ❌ Before: 모든 로직이 메인 세션에서 실행
    → diff + supervisor 결과 + 리포트 = 메인 컨텍스트 폭발
 
-✅ After: cr-orchestrator가 백그라운드 fork로 실행
+✅ After: cr-orchestrator 한 번 Fork
    → 메인은 {paths, summary JSON}만 받음
+   → orchestrator 내부에서 Spawn으로 병렬 조율은 자체 해결
 ```
 
 **메인 세션 유지비용**:
 - Before: 큰 PR 1회 리뷰로 주 컨텍스트 소진
 - After: 큰 PR이어도 메인 세션은 정상 유지, 다른 작업 병행 가능
+
+**중요:** Fork는 타임라인 분기(메인 ↔ 리뷰 작업), Spawn은 작업 내부의 병렬 워커 생성. 이 둘을 구분하는 것이 설계의 핵심.
 
 ---
 
