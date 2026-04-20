@@ -102,7 +102,7 @@ Agent(
   subagent_type: "my-harness:cr-supervisor",
   model: "opus",
   run_in_background: true,
-  prompt: "당신은 Supervisor A이다. 5개 서브에이전트를 반드시 Agent 도구로 생성하고 결과를 통합하라.\n\n[출력 언어] finding의 모든 자연어 필드(title, problem, why, impact, recommendation)는 한글로 작성하라. 코드·식별자·경로는 원문 유지.\n\nTrace 파일: {TRACE 경로}\n  → 모든 agent spawn/result를 이 파일에 JSONL로 append하라 (cr-supervisor.md 지침 참조)\n\n{diff 내용} + {파일 목록} + {레포 컨텍스트} + {리뷰 계획}"
+  prompt: "당신은 Supervisor A이다. 5개 서브에이전트를 반드시 Agent 도구로 생성하고 결과를 통합하라. A는 기본(baseline) 역할로, 각 전문 에이전트의 고유 체크리스트를 **편향 없이** 적용한다. 별도 축 지시가 없어도 정확성·안정성·보안·성능·유지보수성을 표준 관점으로 평가하면 된다.\n\n[출력 언어] finding의 모든 자연어 필드(title, problem, why, impact, recommendation)는 한글로 작성하라. 코드·식별자·경로는 원문 유지.\n\nTrace 파일: {TRACE 경로}\n  → 모든 agent spawn/result를 이 파일에 JSONL로 append하라 (cr-supervisor.md 지침 참조)\n\n{diff 내용} + {파일 목록} + {레포 컨텍스트} + {리뷰 계획}"
 )
 
 Agent(
@@ -110,7 +110,7 @@ Agent(
   subagent_type: "my-harness:cr-supervisor",
   model: "opus",
   run_in_background: true,
-  prompt: "당신은 Supervisor B이다. 놓치기 쉬운 미묘한 문제에 집중하라. 5개 서브에이전트를 반드시 Agent 도구로 생성하고 결과를 통합하라.\n\n[출력 언어] finding의 모든 자연어 필드(title, problem, why, impact, recommendation)는 한글로 작성하라. 코드·식별자·경로는 원문 유지.\n\nTrace 파일: {TRACE 경로}\n  → 모든 agent spawn/result를 이 파일에 JSONL로 append하라\n\n{동일 입력}"
+  prompt: "당신은 Supervisor B이다. A가 잡는 명백한 위험과 **상호 보완**되도록, 다음 4개 축의 **간접적·파생적 위험**에 우선순위를 둔다:\n\n  1. **데코레이터/예외 경로 상호작용** — 선언된 retry/transaction/auth 데코레이터가 본문의 try/except·early return·transactional 경계에 삼켜져 무력화되는지 정적 흐름으로 추적. 예: `@shared_task(autoretry_for=(X,))`가 상위 `except Exception`에 가려지는 케이스.\n  2. **언어/프레임워크 관용구 함정** — 현재 실행은 맞지만 언어 특성상 조용히 깨지는 패턴. 예: Python `transaction.on_commit(lambda e=e: ...)` late-binding, `QuerySet.update()`가 `auto_now`/signals 우회, JS async forEach, Go loop variable capture.\n  3. **미래 확장 리스크 (future-risk)** — 한 스프린트 내 합리적으로 예상되는 다음 변경에서 깨지는 설계. 예: URL update API가 추가되면 `og_preview` FK stale. 막연한 추측 금지, 구체 시나리오 1개 제시.\n  4. **계약·스키마 일관성** — 서버-클라이언트 계약 모호성, 파생 필드(is_ready/has_*) 부재로 인한 클라이언트 재구현, 에러 시그널 모호성(빈 문자열 + error=true 같은 패턴), camelCase/snake_case 전환 타이밍 혼동.\n\n5개 서브에이전트를 반드시 Agent 도구로 생성하고 결과를 통합하라. 각 서브에이전트에게도 위 4개 축을 우선 검토하도록 프롬프트에 명시하라.\n\n[출력 언어] finding의 모든 자연어 필드(title, problem, why, impact, recommendation)는 한글로 작성하라. 코드·식별자·경로는 원문 유지.\n\nTrace 파일: {TRACE 경로}\n  → 모든 agent spawn/result를 이 파일에 JSONL로 append하라\n\n{동일 입력}"
 )
 ```
 

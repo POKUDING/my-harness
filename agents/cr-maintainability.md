@@ -73,6 +73,46 @@ finding의 자연어 필드(`title`, `problem`, `why`, `impact`, `recommendation
 - 팀 컨벤션 범위의 네이밍 차이
 - 언어 관용적 패턴 (Go의 `err`, JS의 `e` 등)
 
+### 6. 언어별 관용구 함정 (Language Idiom Traps)
+
+**현재 코드는 동작하지만 언어/프레임워크의 관용구에 숨은 함정이 있는 패턴**을 능동적으로 찾는다. "당장 버그는 없다"는 이유로 넘어가지 말 것 — 확장·유지보수 시 조용히 깨지는 대표 패턴.
+
+**Python:**
+- **`transaction.on_commit(lambda: ...)` late-binding**: 루프 안에서나 인접 코드에 재바인딩이 생기면 closure가 마지막 값만 캡처 → `functools.partial(fn, *args)` 또는 `lambda e=e: ...` 디폴트 바인딩으로 수정 권고.
+- **`QuerySet.update()` 호출 뒤에 캐시 갱신·인덱스 재적재·파생 상태 업데이트 로직이 각 호출 지점마다 반복 산재**: 우회 사실 자체(auto_now/signals 누락)는 cr-performance Section 6에서 담당. 이 에이전트는 그 우회를 **보정하는 코드의 구조적 중복**(여러 호출자가 각자 `updated_at=timezone.now()` 주입, 각자 캐시 키 무효화)만 지적한다.
+- **`datetime.utcnow()`는 naive datetime**: timezone-aware가 기대되는 곳에서 미묘한 offset 버그. `datetime.now(timezone.utc)` 사용.
+- **mutable default argument**: `def f(x, xs=[])` — 여러 호출 간 공유. `None` sentinel + `xs or []` 패턴.
+- **`except Exception as e:` 후 bare `raise`가 아닌 `raise e`**: traceback chaining 손실. `raise`만 쓰거나 `from e` 사용.
+
+**JavaScript / TypeScript:**
+- **`forEach` + async callback**: `await`가 순차 실행되지 않음, rejection도 잡히지 않음. `for...of` + `await` 또는 `Promise.all(map(...))`.
+- **loop 안 closure 캡처**: `setTimeout(() => console.log(i))` in `for (var i=...)` 패턴, `let` 쓰거나 IIFE.
+- **`Promise.all` vs `Promise.allSettled`**: 하나가 reject되면 다른 결과가 버려짐 — 모든 결과가 필요하면 `allSettled`.
+- **`==` 허용된 코드베이스에서의 `null == undefined`** 혼동, 또는 `Number(x)` vs `parseInt(x, 10)`의 NaN 경계.
+- **React useEffect deps 누락** 시 stale closure, cleanup 누락 시 memory leak.
+
+**Go:**
+- **loop variable capture in goroutines**: Go 1.22 이전은 루프 변수를 goroutine이 공유. 로컬 변수로 shadow 필요.
+- **nil interface vs nil pointer**: `var err error = (*MyErr)(nil)`은 `err != nil`로 평가됨.
+
+**일반 원칙:** "이 언어/프레임워크를 오래 쓴 사람이 '함정이네'라고 말할 법한 지점"을 적극적으로 지적한다. 선언은 문법적으로 옳지만 **런타임 의미가 기대와 다른** 경우가 타깃.
+
+### 7. 가까운 확장 시나리오 리스크 (Future-Risk)
+
+**현재 코드는 정상 동작하지만, 합리적으로 예상 가능한 다음 변경에서 깨지는 설계**를 지적한다. 원격 미래가 아니라 **"한 스프린트 안에 일어날 법한 확장"** 기준.
+
+**대상 패턴:**
+- **정규화되지 않은 FK/역정규화 필드가 미래 update 경로에서 stale**이 되는 구조 (예: `post.og_preview_id`가 있는데 `post.url`이 바뀌면 FK는 그대로).
+- **단일 호출자만 있어 지금은 문제 없지만, 두 번째 호출자가 생기는 순간 조건이 모순되는 플래그/상태**.
+- **루프/배치 처리가 없는 지금은 안전하지만, 배치 적용 시 terminal 상태가 공유되는 closure/변수**.
+- **단일 클라이언트 계약만 가정**: 모바일/웹/서버가 동일 API를 쓰게 될 때 깨질 응답 스키마.
+- **멱등성 요구가 생기면 깨지는 부작용 순서**: 지금은 한 번만 호출되지만, 재시도/중복 호출이 합리적으로 도입될 경우.
+
+**작성 시 원칙:**
+- 막연한 "나중에 문제가 될 수 있다"는 **금지**. 구체적 확장 시나리오 한 개(예: "URL 수정 API가 추가되면 og_preview FK가 stale")를 제시하고, 그 시나리오에서 어떤 invariant가 깨지는지 서술.
+- Scope는 대체로 `followup` — 현재 PR에서 고치기엔 범위가 크거나 아직 깨지지 않았기 때문.
+- Severity는 `major`를 넘지 않는 선 (현재 동작 기준). 단, 확장이 이미 같은 PR 내 다른 커밋에서 예정된 경우 `fix_now`.
+
 ## severity 판정 기준
 
 | severity | 기준 | 예시 |

@@ -46,6 +46,25 @@ finding의 자연어 필드(`title`, `problem`, `why`, `impact`, `recommendation
 - 재시도 시 멱등성 미보장
 - 백오프 전략 없음 (즉시 재시도로 상대 서비스 압박)
 
+### 6. 데코레이터-예외 경로 상호작용 (정적 흐름 분석)
+
+선언된 재시도/복구 전략이 **실제 런타임 경로에서 도달 가능한지** 추적한다. 선언만 보고 "있다"로 판정하지 말 것.
+
+**반드시 지적:**
+- **상위 포괄 catch가 재시도 타겟을 삼킴**: `@shared_task(autoretry_for=(IntegrityError,))` 같은 선언이 있어도, 함수 본문의 `try: ... except Exception: log_and_return()`이 `IntegrityError`를 먼저 포획하면 재시도는 **절대 발생하지 않는다**. 데코레이터-예외 경로가 무력화된 상태.
+- **예외 타입 불일치**: `autoretry_for=(HTTPError,)`인데 실제 호출에서 올라오는 예외가 `requests.ConnectionError`면 재시도 대상이 아님.
+- **재시도 전에 상태가 영구화**: FK update → retry 대상 예외 발생 시 DB는 이미 커밋된 상태로 재시도 → 중복 효과 발생.
+- **transactional 경계와 retry 경계의 불일치**: `@transaction.atomic` 안에서의 재시도는 이미 롤백된 세션 위에서 재시도되지 않음.
+
+프레임워크 예시:
+- **Celery**: `autoretry_for`, `retry_backoff`, `acks_late=True`와 body의 try/except 상호작용
+- **Sidekiq/RQ/BullMQ**: worker가 재시도하는 에러 타입과 코드가 캐치하는 타입의 일치 여부
+- **tenacity / retry decorators (Python)**: `retry=retry_if_exception_type(...)` 선언과 실제 전파 경로
+
+**검증 방식:**
+- 데코레이터가 나오면 → 함수 본문의 모든 try/except를 읽고 → 선언된 예외 타입이 **실제로 프레임워크까지 bubble up 하는지** 확인
+- except 절에서 `raise`/`raise e`로 재던지는지, 아니면 조용히 삼키는지 구분
+
 ## severity 판정 기준
 
 | severity | 기준 |

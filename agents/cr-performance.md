@@ -38,6 +38,31 @@ finding의 자연어 필드(`title`, `problem`, `why`, `impact`, `recommendation
 - 스트리밍 가능한 곳에서의 전체 로딩
 - 클로저/이벤트 리스너로 인한 메모리 누수
 
+### 6. ORM / 프레임워크 숨은 사이드이펙트
+
+**"빠른 경로" 관용구가 조용히 필드·신호·캐시를 우회하는 패턴**을 검사한다. 순수 속도는 좋아 보이지만 관측성·정합성을 희생하는 경우가 대부분.
+
+**Django:**
+- **`QuerySet.update()`가 우회하는 것들**: `auto_now=True` 필드 갱신, `pre_save`/`post_save` signals, model `save()` 오버라이드, `updated_at`/`modified_at`. 결과: 감사 로그 누락, 캐시 무효화 실패, 검색 인덱스 미갱신.
+  - 권고: `updated_at=timezone.now()`를 update 호출에 명시적으로 포함, 또는 per-instance `save()` 루프가 수용 가능한지 평가.
+- **`bulk_create(ignore_conflicts=True)`**: signal 미발행, PK 미할당 (DB 따라 다름).
+- **`select_for_update()` 없이 `.update()`를 여러 워커가 호출**: race condition. `performance` 관점에서는 "lock 획득 비용 vs 재시도 비용"으로 평가.
+- **`only()` / `defer()` 이후 접근한 필드로 인한 추가 쿼리**: 의도된 최적화가 오히려 N+1로 변질.
+- **`prefetch_related` + 체인 필터**: prefetch 후 Python-level 필터링으로 인한 캐시 무효화.
+
+**SQLAlchemy:**
+- `bulk_update_mappings`/`bulk_insert_mappings`는 `session.flush`/ORM event를 우회.
+- `Query.update(synchronize_session=False)`의 세션 정합성 문제.
+
+**일반 ORM 공통:**
+- **lazy-loaded 관계가 템플릿/시리얼라이저 루프 안에서 호출**되어 N+1.
+- **soft delete 관용구 (`deleted_at IS NULL` 필터)를 포함하지 않은 raw query/subquery**로 인해 삭제된 레코드가 계산에 포함.
+- **캐시 계층과 ORM signal의 불일치**: `update()` 경유 변경이 invalidation을 트리거하지 않음.
+
+**검증 시각:**
+- "빠른 경로" 호출이 보이면 → 해당 모델의 `save()` 오버라이드, signals, custom manager, cache layer를 모두 확인 → 우회되는 사이드이펙트를 finding에 명시.
+- 관측성 손실은 단순 성능 이슈가 아니라 **관측성 회귀**로 보고, severity를 과장하지 않되 `impact`에 "로그/인덱스/캐시 누락으로 디버깅 비용 증가" 같은 실제 영향을 기술한다.
+
 ## severity 판정 기준
 
 | severity | 기준 |

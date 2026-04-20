@@ -40,6 +40,8 @@ echo "{\"event\":\"supervisor_start\",\"supervisor\":\"A\",\"time\":\"$(date -Is
 
 **각 Spawn 직전에 `agent_spawn` 이벤트를 trace에 기록한다.** 5번의 Bash 호출 + 5번의 Spawn을 한 응답에 모두 포함하라.
 
+**역할 축 전파 (중요, 조건부):** orchestrator가 당신에게 `[역할 축]` 블록을 전달했고 **그 블록이 구체 축(번호 목록 또는 4개 이상의 구체적 검사 관점)을 포함**한다면 (예: Supervisor B의 4개 축 — 데코레이터/예외 경로, 언어 관용구 함정, 미래 확장 리스크, 계약·스키마 일관성), 아래 각 서브에이전트 프롬프트의 `{diff 전문}` 앞에 그 블록을 **그대로 복사**해 넣어라. 전문가들이 해당 축을 우선 검토하도록 유도해야 B의 차별화가 실제로 발현된다. 블록이 일반적인 baseline 설명뿐이면 전파하지 않는다(노이즈).
+
 ```bash
 # 5개 호출 전에 5개 spawn 이벤트 기록 (Bash 도구로 순서대로)
 echo "{\"event\":\"agent_spawn\",\"supervisor\":\"A\",\"subagent_type\":\"my-harness:cr-correctness\",\"time\":\"$(date -Iseconds)\"}" >> <TRACE>
