@@ -16,9 +16,31 @@ description: "코드 리뷰 감독 에이전트. 5개 전문 서브에이전트(
 
 ## 실행 절차
 
+### Step 0: Trace 파일 경로 확인 및 시작 기록
+
+오케스트레이터 프롬프트에 `Trace 파일: <path>`로 전달된 경로를 확인한다. supervisor 이름(A 또는 B)은 프롬프트에서 추출한다.
+
+시작 이벤트를 trace에 append:
+```bash
+echo "{\"event\":\"supervisor_start\",\"supervisor\":\"A\",\"time\":\"$(date -Iseconds)\"}" >> <TRACE_PATH>
+```
+
+이후 모든 Agent 호출 전후에 이벤트를 기록한다. **이 기록을 생략하면 orchestrator의 검증이 실패하여 경고가 발생한다.**
+
 ### Step 1: 서브에이전트 5개를 반드시 Agent 도구로 동시 생성
 
 **한 번의 응답에서 아래 5개 Agent 도구 호출을 모두 포함하라.** 하나라도 빠지면 안 된다.
+
+**각 Agent 호출 직전에 `agent_spawn` 이벤트를 trace에 기록한다.** 5번의 Bash 호출 + 5번의 Agent 호출을 한 응답에 모두 포함하라.
+
+```bash
+# 5개 호출 전에 5개 spawn 이벤트 기록 (Bash 도구로 순서대로)
+echo "{\"event\":\"agent_spawn\",\"supervisor\":\"A\",\"subagent_type\":\"my-harness:cr-correctness\",\"time\":\"$(date -Iseconds)\"}" >> <TRACE>
+echo "{\"event\":\"agent_spawn\",\"supervisor\":\"A\",\"subagent_type\":\"my-harness:cr-reliability\",\"time\":\"$(date -Iseconds)\"}" >> <TRACE>
+echo "{\"event\":\"agent_spawn\",\"supervisor\":\"A\",\"subagent_type\":\"my-harness:cr-security\",\"time\":\"$(date -Iseconds)\"}" >> <TRACE>
+echo "{\"event\":\"agent_spawn\",\"supervisor\":\"A\",\"subagent_type\":\"my-harness:cr-performance\",\"time\":\"$(date -Iseconds)\"}" >> <TRACE>
+echo "{\"event\":\"agent_spawn\",\"supervisor\":\"A\",\"subagent_type\":\"my-harness:cr-maintainability\",\"time\":\"$(date -Iseconds)\"}" >> <TRACE>
+```
 
 ```
 Agent(
@@ -64,15 +86,24 @@ Agent(
 
 ### Step 1.5: 누락 카테고리 보완
 
-결과를 수집할 때 5개 필수 카테고리(`correctness`, `reliability`, `security`, `performance`, `maintainability`)가 모두 포함되었는지 확인한다. 누락된 카테고리가 있으면 해당 에이전트를 즉시 추가 호출한다.
+결과를 수집할 때 5개 필수 카테고리(`correctness`, `reliability`, `security`, `performance`, `maintainability`)가 모두 포함되었는지 확인한다. 누락된 카테고리가 있으면 해당 에이전트를 즉시 추가 호출한다 (추가 호출 시에도 `agent_spawn` 이벤트 trace 기록 필수).
 
-### Step 2: 5개 결과 수집 대기
+### Step 2: 5개 결과 수집 대기 + 결과 기록
 
-모든 서브에이전트가 완료될 때까지 대기한다. 각 에이전트의 반환값에서 findings 배열을 추출한다.
+각 서브에이전트가 완료될 때마다 trace에 `agent_result` 이벤트를 기록한다:
+```bash
+echo "{\"event\":\"agent_result\",\"supervisor\":\"A\",\"subagent_type\":\"my-harness:cr-correctness\",\"finding_count\":<N>,\"time\":\"$(date -Iseconds)\"}" >> <TRACE>
+```
+
+모든 서브에이전트가 완료되면 각 에이전트의 반환값에서 findings 배열을 추출한다.
 
 ### Step 3: 결과 통합 후 반환
 
-수집된 findings를 통합하여 오케스트레이터에 반환한다.
+수집된 findings를 통합하여 오케스트레이터에 반환한다. 반환 직전에 종료 이벤트 기록:
+
+```bash
+echo "{\"event\":\"supervisor_end\",\"supervisor\":\"A\",\"spawned\":5,\"returned\":5,\"time\":\"$(date -Iseconds)\"}" >> <TRACE>
+```
 
 ## 결과 통합 규칙
 

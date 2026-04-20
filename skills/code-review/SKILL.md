@@ -47,10 +47,12 @@ Main Session
 2. **diff 범위** (`main..branch`) → `git diff {range}`
 3. **파일/디렉토리** 경로 → 해당 파일들의 `git diff`
 4. **인자 없음** → 마지막 코드리뷰 이후의 변경사항을 자동 탐지:
-   - `.harness/reviews/` 디렉토리에서 가장 최근 리뷰 JSON 파일의 `metadata.date`를 확인
+   - `.harness/reviews/*/` 하위 폴더 중 가장 최근의 `*-review.json` 파일에서 `metadata.date`를 확인
    - 해당 날짜 이후의 커밋을 `git log --after="{date}" --format=%H`로 수집
    - `git diff {가장 오래된 커밋}^...HEAD`로 diff 생성
-   - `.harness/reviews/`가 없거나 이전 리뷰가 없으면 `git diff main...HEAD`로 fallback
+   - 이전 리뷰 없음 → `git diff main...HEAD`로 fallback
+
+이번 리뷰의 **summary**(주제 slug)를 도출하고 사용자 확인을 받는다. 세부 규칙은 `agents/cr-orchestrator.md`의 "Step 1: Summary 도출" 참조.
 
 수집할 컨텍스트:
 - diff 내용 전문
@@ -138,8 +140,12 @@ Agent(
 
 1. findings를 severity 순으로 정렬 (Critical → Major → Minor → Nit)
 2. 각 finding에 confidence 레벨 부여 (high/medium/review)
-3. **Markdown 리포트** 생성 — `.harness/reviews/{YYYYMMDD_HHmmss}-review.md`
-4. **JSON 리포트** 생성 — `.harness/reviews/{YYYYMMDD_HHmmss}-review.json`
+3. **Agent Execution Trace 섹션**을 리포트에 포함 (trace.jsonl 집계 결과)
+4. **Markdown 리포트** 생성 — `.harness/reviews/{TS}-{SUM}/{TS}-{SUM}-review.md`
+5. **JSON 리포트** 생성 — `.harness/reviews/{TS}-{SUM}/{TS}-{SUM}-review.json`
+
+`{TS}` = YYYYMMDD_HHmmss, `{SUM}` = Step 0에서 결정된 리뷰 주제 slug.
+모든 산출물(trace, fix-result, walk state 등)이 동일 폴더에 묶여 저장된다.
 
 출력 형식 상세: `references/report-format.md` 참조
 

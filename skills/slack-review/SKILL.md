@@ -85,7 +85,7 @@ python3 skills/slack-plan/scripts/fetch_slack_list.py "<결정된 URL>"
 2. **Fallback: plan 파일 + git log** — 실행 기록에서 매칭되지 않은 아이템에 한해:
    - `docs/plans/slack-list-*-plan.md`의 "원문 요청 요약" 테이블에서 `record_id` 컬럼 확인
    - 해당 아이템과 연결된 TODO의 `예상 작업 범위` 파일 목록 파악
-   - `.harness/reviews/`의 최근 리뷰 이후 `git log --since` + `git diff`로 실제 변경 수집
+   - `.harness/reviews/*/` 폴더의 최근 리뷰 이후 `git log --since` + `git diff`로 실제 변경 수집
    - 파일 목록이 겹치거나 커밋 메시지에 item 키워드가 나타나면 작업됨으로 판정
 
 각 항목별 작업 진행 상태를 판정한다:
@@ -110,7 +110,7 @@ python3 skills/slack-plan/scripts/fetch_slack_list.py "<결정된 URL>"
 작업됨으로 판정된 항목 전체에 대해 `/code-review` 스킬을 호출하여 다중 에이전트 리뷰를 수행한다.
 
 1. 관련 변경사항의 diff 범위를 `/code-review`에 전달 (Step 2에서 결정된 범위)
-2. `/code-review`가 `.harness/reviews/{YYYYMMDD_HHmmss}-review.json`을 생성할 때까지 대기
+2. `/code-review`가 `.harness/reviews/{TS}-{SUM}/{TS}-{SUM}-review.json`을 생성할 때까지 대기
 3. 생성된 리뷰 JSON의 findings를 항목별로 매핑하여 verdict를 판정한다:
    - **APPROVE**: 해당 항목 관련 파일에 `critical`/`major` severity 없음
    - **REQUEST_CHANGES**: `critical` 또는 `major` severity + `scope: fix_now` 존재
