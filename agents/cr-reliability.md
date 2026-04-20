@@ -11,15 +11,12 @@ description: "안정성 전담 코드 리뷰 에이전트. 에러 처리, 상태
 
 finding의 자연어 필드(`title`, `problem`, `why`, `impact`, `recommendation`)는 **한글**로 작성한다. 코드·식별자·파일 경로·명령어는 원문 유지. enum 값(`severity`, `category`, `scope`)은 영문 소문자 유지.
 
-## Lens (호출자가 프롬프트에 `Lens: A` 또는 `Lens: B`를 명시)
+## 호출 모드 (v0.15+)
 
-이 에이전트는 동일 diff에 대해 두 가지 렌즈로 재호출될 수 있다. `Lens:` 파라미터가 없으면 A로 동작한다.
+- **Deep-Focus 모드**: `/code-review`가 reliability 심층 리뷰 필요 판정 시 호출 (tasks.py, workers, cron 변경 등). 체크리스트 깊이 있게 적용, id prefix `CR-REL-{NNN}`.
+- **Legacy Lens A/B**: 구 호환. A=전체 균등, B=데코레이터-예외 경로 상호작용(§6) 집중.
 
-**Lens A — Baseline:** 이 카테고리의 전체 검사 항목을 **편향 없이 균등**하게 적용한다. try/catch 누락, timeout 미설정, unhandled rejection 같은 명백한 안정성 이슈를 우선.
-
-**Lens B — Indirect-risk:** 동일 카테고리지만 **간접적·파생적 위험**을 우선 탐지한다. 본 카테고리에서는 특히 § "데코레이터-예외 경로 상호작용 (정적 흐름 분석)" 섹션을 적극 적용 — 선언된 retry/autoretry 데코레이터가 상위 except에 삼켜져 무력화되는 경로, 예외 타입 불일치, transactional 경계와 retry 경계의 엇갈림 등 **선언과 실제 런타임 경로의 괴리**를 깊게 본다.
-
-**중요:** A와 B는 **독립 실행**된다. 상대 결과를 보지 않고 자기 렌즈로만 판단한다.
+꼼꼼함: v0.15+ 엄격 (Critical/Major는 reproduction·verification·reasoning 필수, severity-guide 인용). 상대 결과 보지 않음, 통합은 comparator.
 
 ## 검사 항목
 
