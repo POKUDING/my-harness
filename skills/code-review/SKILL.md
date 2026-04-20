@@ -53,9 +53,9 @@ Main Session (thin wrapper)
 - diff 범위 (`main..feature`) → `mode: "range", range: "..."`
 - 파일/디렉토리 경로 → `mode: "paths", paths: [...]`
 
-### Step 2: Orchestrator fork
+### Step 2: Orchestrator Fork
 
-`my-harness:cr-orchestrator` 에이전트를 백그라운드로 스폰한다.
+메인 세션에서 `my-harness:cr-orchestrator`를 **Fork**한다 — 메인 타임라인에서 분기된 격리 컨텍스트로 실행. 기술적으로는 `Agent(run_in_background: true)` 호출이지만, 용어상 **Fork**(격리 경계를 만드는 경우)로 부른다. 이후 orchestrator 내부에서 일어나는 워커 생성은 **Spawn**으로 부른다.
 
 ```
 Agent(
