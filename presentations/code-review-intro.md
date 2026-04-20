@@ -43,12 +43,14 @@ Main Session (thin wrapper)
                            └─ 최종 리포트
 ```
 
-### 용어 구분
+### 용어 구분 (개념적 구분, 기술적으로는 같은 메커니즘)
 
 | 경계 | 용어 | 의미 |
 |------|------|------|
 | Main → Orchestrator | **Fork** | 메인 대화 타임라인에서 **분기** — 메인은 오염되지 않고, 리뷰 작업은 독립 경로로 진행 |
 | Orchestrator 내부 | **Spawn** | 워커 에이전트 **생성** — 병렬 실행을 위한 위임, 결과를 부모에게 반환 |
+
+**기술적 참고:** Fork와 Spawn 모두 내부적으로 `Agent(run_in_background: true)` 호출이다. Unix `fork()`처럼 부모 상태를 복사하지 않고, 새 Claude 인스턴스가 에이전트 정의 + 프롬프트만 가지고 시작한다. 둘의 구분은 "격리 경계로서의 의미"이지 호출 API 차이는 아니다.
 
 **핵심:** 격리 Fork는 Main↔Orchestrator 한 번뿐. 내부의 Spawn은 orchestrator의 병렬 실행 구현 세부사항이며, 메인 세션의 관심사가 아니다.
 
@@ -254,18 +256,25 @@ Files:   src/integrations/payment.ts
 
 ## 15. 전체 스킬 카탈로그 (연관 도구)
 
+**코드리뷰 계열 (직접 연관)**
 | 스킬 | 역할 |
 |------|------|
 | `/code-review` | 다중 에이전트 합의 리뷰 |
 | `/code-review-fix` | fix_now 항목 병렬 자동 수정 |
 | `/code-review-walk` | finding을 대화형으로 하나씩 점검·수정·커밋 |
 | `/code-review-quick` | 빠른 단일 에이전트 리뷰 (가벼운 점검) |
-| `/api-summary` | 작업 후 API 변경 요약 (팀 공유용) |
-| `/slack-plan` · `/slack-review` | Slack List ↔ 작업 계획서 ↔ 완료 처리 |
-| `/plan-execute` | 계획서 기반 병렬 구현 (ultrawork + ralph) |
-| `/guide-init` · `/guide-check` · `/guide-fix` | 프로젝트 가이드 문서 생성/동기화 |
 
-**코드리뷰는 독립 기능이지만, 리뷰→수정→Slack 보고까지 하나의 체인으로 연결 가능**.
+**상하류 연관 스킬**
+| 스킬 | 역할 |
+|------|------|
+| `/slack-setup` | Slack API 토큰/List URL 저장 (최초 1회) |
+| `/slack-plan` · `/slack-review` | Slack List ↔ 작업 계획서 ↔ 완료 처리 |
+| `/plan-execute` | 계획서 기반 병렬 구현 (ultrawork + ralph 패턴) |
+| `/api-summary` | 작업 후 API 변경 요약 (팀 공유용, 독립 스킬) |
+| `/guide-init` · `/guide-check` · `/guide-fix` | 프로젝트 가이드 문서 생성/동기화 |
+| `/proj-status` | 프로젝트 상태 분석 (git, 파일, 의존성) |
+
+**코드리뷰는 독립 기능이지만, slack-plan → plan-execute → code-review → slack-review 흐름으로 연결 가능**.
 
 ---
 
@@ -292,11 +301,11 @@ Files:   src/integrations/payment.ts
 ## 17. 기술 스택
 
 - **플랫폼**: Claude Code 플러그인 (자체 제작 my-harness)
-- **모델 전략**:
-  - Orchestrator / Supervisor / Comparator / Maintainability: Opus (판단 난이도 높음)
-  - Correctness / Reliability / Security / Performance: Sonnet (패턴 탐지)
-  - quick-fix: Haiku (경량 수정)
-- **병렬화**: `run_in_background: true`로 동시 실행
+- **모델 전략** (코드리뷰 체인):
+  - Orchestrator / Supervisor A/B / Comparator / Maintainability: **Opus** (판단 난이도 높음)
+  - Correctness / Reliability / Security / Performance: **Sonnet** (패턴 탐지)
+  - cr-fix (code-review-fix의 수정 에이전트): **Sonnet**
+- **병렬화**: `Agent(run_in_background: true)` 호출로 동시 실행
 - **재현성**: 타임스탬프 기반 폴더, JSONL trace, 설정 파일 version 관리
 
 ---
@@ -313,7 +322,7 @@ Files:   src/integrations/payment.ts
 
 ## 19. 한계와 솔직한 트레이드오프
 
-- **토큰 비용**: 10개 에이전트 × 2회 실행 = 일반 PR 대비 토큰 많음
+- **토큰 비용**: 5 전문가 × 2 supervisor = 10개 agent 호출로 일반 PR 리뷰 대비 토큰 많음
 - **작은 PR은 과함**: 1-2파일 변경은 `/code-review-quick`이 적합
 - **합의는 보조지표**: 합의율이 낮다고 finding이 틀린 것은 아님
 - **LLM 한계**: 도메인 특화 룰(회사 내부 규정)은 별도 에이전트 추가 필요

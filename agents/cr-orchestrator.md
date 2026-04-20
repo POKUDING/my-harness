@@ -104,7 +104,7 @@ Agent(
 
 ### Step 3.5: 진행률 보고 + Trace 기반 검증
 
-각 감독 에이전트가 완료될 때마다 trace 파일을 읽어 **실제 spawn/return 여부를 확정적으로 검증**한다.
+각 감독 에이전트가 완료될 때마다 trace 파일을 읽어 **실제 spawn/return 여부를 파일 기반 증거로 검증**한다. (trace는 supervisor가 Bash echo로 직접 append하므로, 기록 누락 시 해당 이벤트는 검증 불가로 표시한다.)
 
 ```bash
 # trace.jsonl에서 해당 supervisor의 이벤트 집계
