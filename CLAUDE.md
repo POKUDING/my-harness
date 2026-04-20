@@ -28,16 +28,18 @@ Personal productivity plugin for Claude Code.
 
 **트리거:** 코드 리뷰, PR 리뷰, diff 리뷰 요청 시 `/code-review` 스킬을 사용하라.
 
+**아키텍처 (v0.13+, Flat):** Claude Code는 subagent가 subagent를 spawn하는 것을 금지하므로 orchestrator/supervisor 중첩 구조가 불가능. 스킬이 메인 세션에서 직접 5 expert × 2 lens = 10개 + comparator 1개를 spawn하는 평탄화 구조로 전환.
+
 **에이전트:**
-- `my-harness:cr-orchestrator` (Opus) — 메인 오케스트레이터
-- `my-harness:cr-supervisor` (Opus) — 리뷰 감독 (A/B 독립 운용)
-- `my-harness:cr-correctness` (Sonnet) — 정확성
-- `my-harness:cr-reliability` (Sonnet) — 안정성
-- `my-harness:cr-security` (Sonnet) — 보안
-- `my-harness:cr-performance` (Sonnet) — 성능
-- `my-harness:cr-maintainability` (Opus) — 유지보수성
-- `my-harness:cr-report-comparator` (Opus) — 보고서 비교 분석
-- `my-harness:cr-fix` (Sonnet) — 파일별 finding 수정 실행
+- `my-harness:cr-correctness` (Sonnet) — 정확성 (Lens A/B)
+- `my-harness:cr-reliability` (Sonnet) — 안정성 (Lens A/B)
+- `my-harness:cr-security` (Sonnet) — 보안 (Lens A/B)
+- `my-harness:cr-performance` (Sonnet) — 성능 (Lens A/B)
+- `my-harness:cr-maintainability` (Opus) — 유지보수성 (Lens A/B)
+- `my-harness:cr-report-comparator` (Opus) — A-set/B-set 비교 분석 + 최종 리포트 파일 작성
+- `my-harness:cr-fix` (Sonnet) — 파일별 finding 수정 실행 (/code-review-fix에서 사용)
+
+**Lens:** 각 전문 에이전트는 `Lens: A`(baseline) 또는 `Lens: B`(indirect-risk)로 프롬프트에 지정되어 호출된다. A는 카테고리 전체 체크리스트 균등 적용, B는 데코레이터/예외 경로·관용구 함정·future-risk·계약 일관성 같은 간접 위험에 우선순위.
 
 **변경 이력:**
 | 날짜 | 변경 내용 | 대상 | 사유 |
@@ -45,6 +47,7 @@ Personal productivity plugin for Claude Code.
 | 2026-04-10 | 초기 구성 | 전체 | 코드 품질/유지보수성 향상을 위한 리뷰 시스템 |
 | 2026-04-10 | fix-agent + code-review-fix 추가 | agents, skills | 리뷰 결과 병렬 자동 수정 |
 | 2026-04-17 | 에이전트를 `agents/` 플랫 구조로 이동, `cr-` prefix 적용 | agents | 플러그인 네이티브 `subagent_type` 등록 |
+| 2026-04-20 | 3단계 중첩 → flat 10-expert 구조로 재설계, cr-orchestrator/cr-supervisor 삭제, Lens A/B 도입 | agents, skills | Claude Code가 subagent의 nested spawn 미지원 (공식 문서 확정) |
 
 ## MCP Tools
 - `harness_project_info` - Get structured project metadata (git info, package info, file stats)

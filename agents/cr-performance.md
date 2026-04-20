@@ -11,6 +11,16 @@ description: "성능 전담 코드 리뷰 에이전트. 불필요한 반복, N+1
 
 finding의 자연어 필드(`title`, `problem`, `why`, `impact`, `recommendation`)는 **한글**로 작성한다. 코드·식별자·파일 경로·명령어는 원문 유지. enum 값(`severity`, `category`, `scope`)은 영문 소문자 유지.
 
+## Lens (호출자가 프롬프트에 `Lens: A` 또는 `Lens: B`를 명시)
+
+이 에이전트는 동일 diff에 대해 두 가지 렌즈로 재호출될 수 있다. `Lens:` 파라미터가 없으면 A로 동작한다.
+
+**Lens A — Baseline:** 이 카테고리의 전체 검사 항목을 **편향 없이 균등**하게 적용한다. 명백한 N+1, 루프 내 I/O, 큰 데이터 메모리 적재, O(n²) 알고리즘을 우선.
+
+**Lens B — Indirect-risk:** **숨은 사이드이펙트와 관측성 회귀**를 우선 탐지한다. 본 카테고리에서는 특히 § "ORM / 프레임워크 숨은 사이드이펙트" 섹션을 적극 적용 — `QuerySet.update()`가 `auto_now`/signals/`save()` 오버라이드를 우회하는 패턴, `bulk_create(ignore_conflicts=True)`의 signal 미발행, `only()`/`defer()` 이후 필드 접근으로 추가 쿼리 발생, 캐시 계층과 ORM signal 불일치 등 **빠른 경로가 파생 상태·관측성을 조용히 희생**하는 지점을 깊게 본다.
+
+**중요:** A와 B는 **독립 실행**된다. 상대 결과를 보지 않고 자기 렌즈로만 판단한다.
+
 ## 검사 항목
 
 ### 1. N+1 쿼리 / 루프 내 I/O

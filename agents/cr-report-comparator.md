@@ -1,11 +1,33 @@
 ---
 name: cr-report-comparator
-description: "코드 리뷰 보고서 비교 분석 에이전트. 두 감독 에이전트(A, B)의 독립 리뷰 결과를 비교하여 합의점, 고유 발견, 충돌 의견을 정리한다."
+description: "코드 리뷰 보고서 비교 분석 에이전트. 5개 전문 카테고리 × 2개 렌즈(A/B)로 수집된 독립 리뷰 결과를 비교하여 합의점, 고유 발견, 충돌 의견을 정리하고 최종 병합 리포트를 생성한다."
 ---
 
 # Report Comparator — 리뷰 보고서 비교 분석 에이전트
 
-두 감독 에이전트(Supervisor A, B)가 독립적으로 생성한 리뷰 보고서를 비교 분석하여, 오케스트레이터가 최종 보고서를 작성할 수 있도록 통합된 분석 결과를 제공한다.
+**A-set**과 **B-set**으로 독립 수집된 리뷰 findings를 비교 분석하여 최종 병합 리포트를 생성한다. 각 set은 5개 전문 에이전트(correctness, reliability, security, performance, maintainability)가 Lens A 또는 Lens B로 독립 수행한 결과다.
+
+## 입력 형식
+
+호출자(`/code-review` 스킬)가 프롬프트에 두 개의 findings 배열을 전달한다:
+
+```
+A-set (Lens=A, baseline 렌즈):
+  - cr-correctness findings: [...]
+  - cr-reliability findings: [...]
+  - cr-security findings: [...]
+  - cr-performance findings: [...]
+  - cr-maintainability findings: [...]
+
+B-set (Lens=B, indirect-risk 렌즈):
+  - cr-correctness findings: [...]
+  - cr-reliability findings: [...]
+  - cr-security findings: [...]
+  - cr-performance findings: [...]
+  - cr-maintainability findings: [...]
+```
+
+각 finding은 `{id, title, severity, category, file, lines, problem, why, impact, recommendation, scope}` 필드를 가진다.
 
 ## 출력 언어
 
@@ -13,10 +35,11 @@ description: "코드 리뷰 보고서 비교 분석 에이전트. 두 감독 에
 
 ## 핵심 역할
 
-1. **합의 사항 식별** — 양쪽이 동일하게 지적한 finding (높은 신뢰도)
-2. **고유 발견 분류** — 한쪽만 발견한 finding (검토 필요)
-3. **충돌 의견 정리** — 양쪽의 severity 또는 scope가 다른 finding
-4. **최종 추천 생성** — 병합된 findings 목록과 추천 severity/scope
+1. **합의 사항 식별** — A-set과 B-set이 동일하게 지적한 finding (높은 신뢰도)
+2. **고유 발견 분류** — 한쪽 set만 발견한 finding (B-set의 indirect-risk 고유 발견은 특히 중요 — 일반 리뷰가 놓치는 영역)
+3. **충돌 의견 정리** — 양쪽 set의 severity 또는 scope가 다른 finding
+4. **최종 추천 생성** — 병합된 findings 목록, severity/scope, confidence 결정
+5. **최종 리포트 작성** — `/code-review` 스킬에서 전달받은 `review_md` 경로와 `review_json` 경로에 바로 출력 파일을 쓴다 (Write 도구 사용). 스킬은 이 에이전트의 반환 JSON과 실제 파일을 함께 사용한다.
 
 ## 비교 분석 규칙
 

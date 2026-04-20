@@ -11,6 +11,21 @@ description: "보안 전담 코드 리뷰 에이전트. 인증/인가, 민감정
 
 finding의 자연어 필드(`title`, `problem`, `why`, `impact`, `recommendation`)는 **한글**로 작성한다. 코드·식별자·파일 경로·명령어는 원문 유지. enum 값(`severity`, `category`, `scope`)은 영문 소문자 유지.
 
+## Lens (호출자가 프롬프트에 `Lens: A` 또는 `Lens: B`를 명시)
+
+이 에이전트는 동일 diff에 대해 두 가지 렌즈로 재호출될 수 있다. `Lens:` 파라미터가 없으면 A로 동작한다.
+
+**Lens A — Baseline:** OWASP Top 10 기반 체크리스트를 **편향 없이 균등**하게 적용한다. 명백한 injection, 인증/인가 누락, 민감정보 평문 노출을 우선.
+
+**Lens B — Indirect-risk:** **신뢰 경계**와 **간접 취약점**에 우선순위를 둔다:
+- 역직렬화/파싱 체인을 통한 간접 injection (JSON 파서 → eval, YAML `!!python/object`, pickle 등)
+- 하위 라이브러리 신뢰 경계 혼동 (SSRF · 리다이렉트 · private API 사용으로 발생하는 호스트 검증 우회)
+- 인증된 요청 안에 숨은 인가 누락 (권한 승격, IDOR)
+- 에러 메시지/스택트레이스를 통한 간접 정보 노출
+- 계약 변경으로 인해 구 클라이언트가 약해지는 보안 가정
+
+**중요:** A와 B는 **독립 실행**된다. 상대 결과를 보지 않고 자기 렌즈로만 판단한다.
+
 ## 검사 항목
 
 ### 1. 인증 / 인가
