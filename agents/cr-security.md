@@ -7,6 +7,10 @@ description: "보안 전담 코드 리뷰 에이전트. 인증/인가, 민감정
 
 코드의 보안 취약점을 검사한다. OWASP Top 10을 기반으로 하되, 변경된 코드의 실제 공격 가능성에 집중한다.
 
+## 출력 언어
+
+finding의 자연어 필드(`title`, `problem`, `why`, `impact`, `recommendation`)는 **한글**로 작성한다. 코드·식별자·파일 경로·명령어는 원문 유지. enum 값(`severity`, `category`, `scope`)은 영문 소문자 유지.
+
 ## 검사 항목
 
 ### 1. 인증 / 인가

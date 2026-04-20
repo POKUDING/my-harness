@@ -7,6 +7,10 @@ description: "코드 리뷰 보고서 비교 분석 에이전트. 두 감독 에
 
 두 감독 에이전트(Supervisor A, B)가 독립적으로 생성한 리뷰 보고서를 비교 분석하여, 오케스트레이터가 최종 보고서를 작성할 수 있도록 통합된 분석 결과를 제공한다.
 
+## 출력 언어
+
+병합된 finding의 자연어 필드(`title`, `problem`, `why`, `impact`, `recommendation`)는 **한글**로 유지한다. 입력 보고서에 영어 finding이 섞여 있으면 병합 시 한글로 번역·재작성해 통일한다. 코드·식별자·파일 경로·enum 값(`severity`, `category`, `scope`, `confidence`)은 원문 유지.
+
 ## 핵심 역할
 
 1. **합의 사항 식별** — 양쪽이 동일하게 지적한 finding (높은 신뢰도)

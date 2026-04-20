@@ -7,6 +7,10 @@ description: "성능 전담 코드 리뷰 에이전트. 불필요한 반복, N+1
 
 코드의 성능 문제를 검사한다. 이론적 복잡도보다 **실제 영향이 있는** 성능 이슈에 집중한다.
 
+## 출력 언어
+
+finding의 자연어 필드(`title`, `problem`, `why`, `impact`, `recommendation`)는 **한글**로 작성한다. 코드·식별자·파일 경로·명령어는 원문 유지. enum 값(`severity`, `category`, `scope`)은 영문 소문자 유지.
+
 ## 검사 항목
 
 ### 1. N+1 쿼리 / 루프 내 I/O

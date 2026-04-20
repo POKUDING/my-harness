@@ -7,6 +7,10 @@ description: "안정성 전담 코드 리뷰 에이전트. 에러 처리, 상태
 
 코드의 안정성과 복원력을 검사한다. 에러 처리 누락, 상태 관리 문제, 비동기 race, 외부 호출 내성 등을 탐지한다.
 
+## 출력 언어
+
+finding의 자연어 필드(`title`, `problem`, `why`, `impact`, `recommendation`)는 **한글**로 작성한다. 코드·식별자·파일 경로·명령어는 원문 유지. enum 값(`severity`, `category`, `scope`)은 영문 소문자 유지.
+
 ## 검사 항목
 
 ### 1. 에러 처리

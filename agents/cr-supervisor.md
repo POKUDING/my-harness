@@ -55,7 +55,7 @@ Agent(
   subagent_type: "my-harness:cr-correctness",
   model: "sonnet",
   run_in_background: true,
-  prompt: "아래 diff를 정확성 관점에서 리뷰하라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라. 각 finding에는 id, title, severity, category('correctness'), file, lines, problem, why, impact, recommendation, scope 필드를 포함하라."
+  prompt: "아래 diff를 정확성 관점에서 리뷰하라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라. 자연어 필드(title/problem/why/impact/recommendation)는 **한글**로 작성하라. 각 finding에는 id, title, severity, category('correctness'), file, lines, problem, why, impact, recommendation, scope 필드를 포함하라."
 )
 
 Agent(
@@ -63,7 +63,7 @@ Agent(
   subagent_type: "my-harness:cr-reliability",
   model: "sonnet",
   run_in_background: true,
-  prompt: "아래 diff를 안정성 관점에서 리뷰하라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라. 각 finding에는 id, title, severity, category('reliability'), file, lines, problem, why, impact, recommendation, scope 필드를 포함하라."
+  prompt: "아래 diff를 안정성 관점에서 리뷰하라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라. 자연어 필드(title/problem/why/impact/recommendation)는 **한글**로 작성하라. 각 finding에는 id, title, severity, category('reliability'), file, lines, problem, why, impact, recommendation, scope 필드를 포함하라."
 )
 
 Agent(
@@ -71,7 +71,7 @@ Agent(
   subagent_type: "my-harness:cr-security",
   model: "sonnet",
   run_in_background: true,
-  prompt: "아래 diff를 보안 관점에서 리뷰하라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라. 각 finding에는 id, title, severity, category('security'), file, lines, problem, why, impact, recommendation, scope 필드를 포함하라."
+  prompt: "아래 diff를 보안 관점에서 리뷰하라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라. 자연어 필드(title/problem/why/impact/recommendation)는 **한글**로 작성하라. 각 finding에는 id, title, severity, category('security'), file, lines, problem, why, impact, recommendation, scope 필드를 포함하라."
 )
 
 Agent(
@@ -79,7 +79,7 @@ Agent(
   subagent_type: "my-harness:cr-performance",
   model: "sonnet",
   run_in_background: true,
-  prompt: "아래 diff를 성능 관점에서 리뷰하라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라. 각 finding에는 id, title, severity, category('performance'), file, lines, problem, why, impact, recommendation, scope 필드를 포함하라."
+  prompt: "아래 diff를 성능 관점에서 리뷰하라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라. 자연어 필드(title/problem/why/impact/recommendation)는 **한글**로 작성하라. 각 finding에는 id, title, severity, category('performance'), file, lines, problem, why, impact, recommendation, scope 필드를 포함하라."
 )
 
 Agent(
@@ -87,7 +87,7 @@ Agent(
   subagent_type: "my-harness:cr-maintainability",
   model: "opus",
   run_in_background: true,
-  prompt: "아래 diff를 유지보수성 관점에서 리뷰하라. skills/code-review/references/maintainability-rules.md를 참조하라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라. 각 finding에는 id, title, severity, category('maintainability'), file, lines, problem, why, impact, recommendation, scope 필드를 포함하라."
+  prompt: "아래 diff를 유지보수성 관점에서 리뷰하라. skills/code-review/references/maintainability-rules.md를 참조하라.\n\n{diff 전문}\n\n결과를 JSON findings 배열로 반환하라. 자연어 필드(title/problem/why/impact/recommendation)는 **한글**로 작성하라. 각 finding에는 id, title, severity, category('maintainability'), file, lines, problem, why, impact, recommendation, scope 필드를 포함하라."
 )
 ```
 
