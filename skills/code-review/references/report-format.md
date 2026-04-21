@@ -104,12 +104,14 @@ except OgFetchError as e:
     ...
 ```
 
-**검증 방법 (Verification).** [수정 후 이 finding이 해결됐는지 어떻게 확인하는가. 테스트 설계·수동 검증 시나리오·메트릭 관찰.]
+**검증 방법 (Verification).** [수정 후 이 finding이 해결됐는지 어떻게 확인하는가. **경량에서 무거운 순**으로 우선순위: 수동 재현 → 로그/메트릭 관찰 → 기존 테스트 보강 → (최후 선택) 신규 테스트 파일. 신규 테스트는 회귀 위험이 매우 높거나 이미 관련 테스트 파일이 있을 때만 권장.]
 
-예시:
-> - 테스트 추가: `test_integrity_error_triggers_autoretry` — mock으로 IntegrityError 주입 후 `self.retry` 호출 확인
-> - 로그 확인: `celery worker`에서 `Task X raised ... IntegrityError ... retrying (0/3)` 메시지 관찰
-> - Metric: `celery.retries` 카운터 증가 확인
+예시 (택일 또는 조합):
+> - **수동 재현**: 로컬에서 동일 URL로 POST 2회 동시 요청 → Celery worker 로그에 `IntegrityError ... retrying` 출력 확인 (5분 소요)
+> - **로그 확인**: `celery worker`에서 `Task X raised ... IntegrityError ... retrying (0/3)` 메시지 관찰
+> - **Metric**: `celery.retries` 카운터 증가 확인 (스테이징에서 5분 관찰)
+> - **기존 테스트 보강**: `test_fetch_og_preview_failure_paths`에 "IntegrityError 케이스" assertion 1줄 추가
+> - **신규 테스트 (선택)**: 프로젝트가 테스트 중심 문화면 `test_integrity_error_triggers_autoretry` 추가 — mock으로 IntegrityError 주입 후 `self.retry` 호출 확인
 
 **관련 Finding (선택).** CR-002 (camelCase 키), CR-009 (URL 정규화 누락) — 이들과 결합 시 효과 증폭.
 
@@ -213,7 +215,7 @@ except OgFetchError as e:
         "before": "const user = await db.query(`SELECT * FROM users WHERE id = ${id}`);",
         "after": "const user = await db.query('SELECT * FROM users WHERE id = $1', [id]);"
       },
-      "verification": "SQLi 페이로드(`1 OR 1=1`, `1; DROP TABLE`)로 POC 테스트 추가. Snyk/semgrep 스캔 통과.",
+      "verification": "수동 재현: SQLi 페이로드(`1 OR 1=1`) 전송 후 의도한 파라미터 바인딩으로만 쿼리 실행되는지 DB 로그 확인. 선택: Snyk/semgrep 정적 분석, 기존 getUserById 테스트에 케이스 추가.",
       "scope": "fix_now",
       "reasoning": "severity-guide Critical 기준: 'RCE / 임의 SQL 실행' 해당. 공격자 인증 불필요."
     }
