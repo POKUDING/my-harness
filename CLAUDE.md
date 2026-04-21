@@ -56,6 +56,7 @@ Personal productivity plugin for Claude Code.
 | 2026-04-20 | /code-review-slim 추가 (cr-direct-reviewer + cr-indirect-reviewer + comparator, 총 3 spawn) | agents, skills, commands | 5×2 구조와 3-agent 구조의 효과 비교 측정용 |
 | 2026-04-20 | v0.15 unified: /code-review-slim을 /code-review로 통합. Direct + Indirect + Deep-Focus(자동 감지, 0~3) 하이브리드. 꼼꼼함 요구사항 강화(reproduction/verification/reasoning 필수), 심각도 캘리브레이션 교차검증 추가 | agents, skills, references, commands | 측정 결과 slim의 cross-category 강점 + flat의 깊이를 모두 살리는 방향으로 단일화 |
 | 2026-04-21 | v0.16 /review-backlog 추가: 리뷰 followup/보류 항목 중앙 집중. dedup key(file+symbol+category+keywords)로 반복 지적 자동 병합, occurrence_count로 우선순위 시그널. /code-review 완료 시 major+ followup 자동 append, /code-review-walk [d]보류 시 수동 push. scripts/backlog_tool.py로 CRUD + stale-check + render-md | scripts, skills, commands | 이전 버전에서는 followup이 각 review 폴더에 흩어져 실질적 망각. 중앙 집중으로 기술 부채 가시화 및 트렌드 추적 |
+| 2026-04-21 | v0.16.1 /code-review-walk의 모든 결정 지점을 AskUserQuestion 도구로 전환 (텍스트 `[w]/[p]/...` 파싱 제거). 5개 지점 모두 구조화 옵션 + description 제공. 수정 제안/커밋 메시지는 preview 필드로 diff·메시지를 monospace 박스에 side-by-side 렌더. | skills/code-review-walk | UX 일관성·명확성 향상. 유저가 각 옵션의 트레이드오프를 description에서 확인 후 선택 가능. Claude가 텍스트 한 글자 해석에 의존하지 않음 |
 
 ## MCP Tools
 - `harness_project_info` - Get structured project metadata (git info, package info, file stats)
