@@ -41,6 +41,7 @@ Personal productivity plugin for Claude Code.
 - `my-harness:cr-maintainability` (Opus) — maintainability deep-focus (대규모 구조 변경 시)
 - `my-harness:cr-report-comparator` (Opus) — 가변 입력 set(2~6) 통합 + 심각도 캘리브레이션 교차검증 + 최종 리포트 Write
 - `my-harness:cr-fix` (Sonnet) — 파일별 finding 수정 실행 · /code-review-fix
+- `my-harness:cr-walk-worker` (Sonnet) — **v0.18+** /code-review-walk에서 승인된 finding의 Edit·typecheck·commit을 background로 전담 실행. Opus 메인은 리뷰·승인만 담당하고 즉시 다음 finding으로 이동
 
 **꼼꼼함 요구사항 (v0.15+, 엄격):** Critical/Major finding은 반드시 `reproduction`(재현 시나리오), `verification`(검증 방법), `reasoning`(severity-guide 기준 인용)을 포함. Comparator가 인용 없는 Critical은 자동 Major 강등.
 
@@ -59,6 +60,7 @@ Personal productivity plugin for Claude Code.
 | 2026-04-21 | v0.16.1 /code-review-walk의 모든 결정 지점을 AskUserQuestion 도구로 전환 (텍스트 `[w]/[p]/...` 파싱 제거). 5개 지점 모두 구조화 옵션 + description 제공. 수정 제안/커밋 메시지는 preview 필드로 diff·메시지를 monospace 박스에 side-by-side 렌더. | skills/code-review-walk | UX 일관성·명확성 향상. 유저가 각 옵션의 트레이드오프를 description에서 확인 후 선택 가능. Claude가 텍스트 한 글자 해석에 의존하지 않음 |
 | 2026-04-21 | v0.17.0 AskUserQuestion 패턴을 4개 추가 스킬로 확장: /slack-review(미작업 진행 + 완료 처리 multiSelect), /code-review-fix(수정 계획 preview + 파일 선택 multiSelect), /slack-plan(완료 후 다음 단계 분기), /plan-execute(실행 계획 preview + 자가 수정 실패 시 분기). 모든 스킬 상단에 "사용자 입력 UI" 원칙 명시. | skills/slack-review, code-review-fix, slack-plan, plan-execute | 텍스트 기반 Y/n 프롬프트를 구조화 UI로 일관 전환. multiSelect/preview 활용으로 일괄 확인·선택 적용·시각 검토 가능 |
 | 2026-04-21 | v0.17.1 테스트 강제 톤 완화: plan-executor는 완료 기준에 명시됐거나 기존 테스트가 있을 때만 테스트 작성(기본 미작성). cr-direct/indirect-reviewer와 report-format의 verification 필드 예시·가이드를 수동 재현·로그·메트릭·기존 테스트 보강·신규 테스트 순으로 재정렬. 신규 테스트 파일 생성은 최후 선택으로 강등. | agents/plan-executor, cr-direct-reviewer, cr-indirect-reviewer, references/report-format | 에이전트가 자발적으로 테스트 파일을 추가하던 과잉 동작 제거. 사용자가 원치 않는 테스트 작성 억제 |
+| 2026-04-21 | v0.18.0 /code-review-walk 비동기 워커 모델 도입: 승인된 fix의 Edit·typecheck·commit을 새 cr-walk-worker(Sonnet) 에이전트가 background spawn으로 전담. Opus 메인은 리뷰·승인까지만 하고 즉시 다음 finding으로 이동. state에 in_progress_bg / bg_failed 추가, 종료 시 pending 워커 대기 + 결과 집계. 파일 겹침 감지로 직렬화. | agents/cr-walk-worker, skills/code-review-walk | 이전에는 [w] 작업 시 Edit/typecheck/commit 동안 유저가 대기. 이제 다음 finding 리뷰를 바로 이어서 진행 가능 → 대기시간 제거 |
 
 ## MCP Tools
 - `harness_project_info` - Get structured project metadata (git info, package info, file stats)
