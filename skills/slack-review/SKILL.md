@@ -7,6 +7,10 @@ description: Slack List 미완료 요청 확인, 코드 변경 검증, 코드리
 
 Slack List 계획서의 미완료 항목을 확인하고, 코드 변경사항을 검증한 뒤 코드리뷰를 거쳐 Slack List 항목을 완료 상태로 업데이트한다.
 
+## 사용자 입력 UI (v0.17+)
+
+결정 지점은 **`AskUserQuestion`** 도구로 받는다. 옵션 2~4개 + `description` 구조화, `preview`로 미작업 목록·완료 대상 미리보기, `multiSelect`로 항목별 일괄 선택 지원.
+
 ## 사용법
 
 ```
@@ -103,7 +107,26 @@ python3 skills/slack-plan/scripts/fetch_slack_list.py "<결정된 URL>"
 | 2 | ...      | 미작업    | -        |
 ```
 
-**미작업 항목이 있으면** 사용자에게 알리고, 작업됨/부분 작업 항목에 대해서만 다음 단계를 진행할지 확인한다.
+**미작업 항목이 있으면** 사용자에게 진행 현황 표를 먼저 보여준 뒤, **AskUserQuestion**으로 계속 여부를 묻는다:
+
+```
+AskUserQuestion({
+  questions: [{
+    question: "미작업 항목이 있습니다. 작업됨/부분 작업 항목만 대상으로 계속 진행할까요?",
+    header: "Proceed",
+    options: [
+      { label: "작업됨/부분만 진행 (Recommended)",
+        description: "미작업 항목은 건너뛰고, 작업됨과 부분 작업 항목에 대해 코드리뷰·완료 처리 진행",
+        preview: "```\n<진행 현황 표 전체>\n```" },
+      { label: "미작업 항목 원인 먼저 확인",
+        description: "중단하고 미작업 항목의 의도된 담당자/일정을 사용자가 확인한 뒤 다시 실행" },
+      { label: "전체 중단",
+        description: "이번 세션 종료. Slack List에는 변경 없음." }
+    ],
+    multiSelect: false
+  }]
+})
+```
 
 ### Step 3: 코드리뷰 진행
 
@@ -219,7 +242,27 @@ python3 skills/slack-plan/scripts/update_slack_list.py <LIST_ID> \
 
 ## 주의사항
 
-1. **자동 완료 처리 전 반드시 사용자 확인**: APPROVE 항목을 Slack에 반영하기 전에 사용자에게 "다음 항목들을 백엔드 완료로 변경합니다. 진행할까요?" 라고 확인한다.
+1. **자동 완료 처리 전 반드시 사용자 확인 (AskUserQuestion + multiSelect)**: APPROVE 항목을 Slack에 반영하기 전에 항목별 개별 선택 UI로 확인:
+   ```
+   AskUserQuestion({
+     questions: [{
+       question: "다음 APPROVE 항목 중 어떤 것을 '백엔드 배포완료'로 변경할까요?",
+       header: "Confirm items",
+       multiSelect: true,
+       options: [
+         { label: "항목 #1: <요청 요약>",
+           description: "파일: src/foo.ts, src/bar.ts · 리뷰 APPROVE · 코멘트 자동 작성" },
+         { label: "항목 #2: <요청 요약>",
+           description: "파일: src/baz.ts · 리뷰 APPROVE · 코멘트 자동 작성" },
+         // 최대 4개. 항목이 더 많으면 "일괄 처리" vs "개별 선택" 질문을 먼저 추가
+         { label: "전체 제외하고 중단",
+           description: "어떤 항목도 Slack에 반영하지 않음" }
+       ]
+     }]
+   })
+   ```
+   - 선택된 항목만 `update_slack_list.py`로 반영
+   - 5개 이상인 경우: 먼저 "일괄/개별 선택" 선분기 질문 (2-option)을 띄워 일괄이면 그대로 진행, 개별이면 페이지네이션으로 4개씩 반복 질문
 2. **코드리뷰는 보수적으로**: 의심스러운 변경은 REQUEST_CHANGES로 판정한다.
 3. **Slack API 실패 시 graceful 처리**: API 호출 실패 시 에러를 표시하되 나머지 항목은 계속 처리한다.
 4. **계획서가 없는 경우**: `docs/plans/`에 관련 계획서가 없으면 커밋 메시지와 diff만으로 판단하되, 매칭 정확도가 낮을 수 있음을 사용자에게 알린다.

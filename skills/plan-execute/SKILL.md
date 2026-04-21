@@ -7,6 +7,10 @@ description: "작업 계획서(docs/plans/*-plan.md)를 입력으로 받아 TODO
 
 작업 계획서의 TODO들을 분석하여 **독립적인 것끼리 병렬로**, **의존성 있는 것은 순차로** 실행한다. 각 배치 완료 후 검증하고 실패 시 자가 수정을 시도한다.
 
+## 사용자 입력 UI (v0.17+)
+
+실행 승인, 자가 수정 실패 시 분기 등 결정 지점은 **`AskUserQuestion`**. 배치 계획은 `preview` 필드로 monospace 박스에 전체 구조를 렌더하여 실행 전 한눈에 확인 가능.
+
 ## 사용법
 
 ```
@@ -97,11 +101,32 @@ description: "작업 계획서(docs/plans/*-plan.md)를 입력으로 받아 TODO
 ### 병렬도
 - 최대 병렬 실행: 3
 - 예상 배치 수: 3
-
-진행할까요? [Y/n]
 ```
 
-`--dry-run`이면 여기서 중단.
+위 실행 계획을 보여준 뒤 **AskUserQuestion + preview**로 승인:
+
+```
+AskUserQuestion({
+  questions: [{
+    question: "위 배치 계획대로 실행할까요?",
+    header: "Execute plan",
+    options: [
+      { label: "전체 실행 (Recommended)",
+        description: "모든 배치를 순서대로 실행. 각 배치 완료 후 자동 검증 + 실패 시 최대 2회 자가 수정.",
+        preview: "```\n배치 1 (병렬 3): TODO-001, TODO-002, TODO-005\n배치 2 (순차 1): TODO-003\n배치 3 (순차 1): TODO-004\n병렬도 최대 3\n```" },
+      { label: "Dry-run (실행 없이 계획만 확인)",
+        description: "--dry-run 모드로 전환. 배치 분할과 의존성 그래프 이상 없는지만 확인하고 종료." },
+      { label: "필터 조정",
+        description: "우선순위/TODO 필터를 바꿔 실행 대상 재선정 (사용자가 자유 텍스트로 지시)" },
+      { label: "중단",
+        description: "실행 취소. 계획서는 변경되지 않음." }
+    ],
+    multiSelect: false
+  }]
+})
+```
+
+`--dry-run` 또는 "Dry-run" 선택 시 여기서 중단.
 
 ### Step 4: 배치별 병렬 실행
 
@@ -160,7 +185,26 @@ Agent(
 1. 에러 출력을 분석하여 영향 파일 식별
 2. `my-harness:quick-fix` 에이전트를 각 에러 파일별로 병렬 스폰
 3. 수정 후 재검증
-4. 2회 시도 후에도 실패하면 → 사용자에게 보고 후 진행 여부 확인
+4. 2회 시도 후에도 실패하면 → **AskUserQuestion**으로 진행 분기:
+   ```
+   AskUserQuestion({
+     questions: [{
+       question: "자가 수정 2회 실패 (배치 N의 검증 오류). 어떻게 진행할까요?",
+       header: "Fix failed",
+       options: [
+         { label: "계속 실행",
+           description: "검증 실패 무시하고 다음 배치 실행. 최종 리포트에 실패 이력 기록됨." },
+         { label: "수동 개입 대기 (Recommended)",
+           description: "실행 중단. 사용자가 에러를 직접 확인/수정 후 다시 /plan-execute 실행하여 재개" },
+         { label: "전체 롤백",
+           description: "이번 실행의 모든 변경을 git checkout으로 되돌리고 종료" }
+       ],
+       multiSelect: false
+     }]
+   })
+   ```
+   - 에러 출력의 주요 메시지 요약 + 영향 파일 목록을 질문 앞에 함께 표시
+   - "수동 개입 대기" 선택 시 `.harness/plans/{TS}-execute.json`에 `paused_at_batch`, `error_summary` 기록해 다음 /plan-execute에서 재개 가능
 
 ### Step 6: 전체 완료 후 결과 보고
 
