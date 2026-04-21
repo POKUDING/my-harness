@@ -8,8 +8,9 @@ Personal productivity plugin for Claude Code.
 - `/code-review-quick` - 빠른 단일 에이전트 코드 리뷰 (가벼운 점검). 본격 리뷰는 `/code-review` 사용
 - `/slack-plan` - Slack List에서 작업 계획서 자동 생성
 - `/slack-review` - Slack List 미완료 항목 확인 → 코드리뷰 → 완료 처리
-- `/code-review` - 통합 다중 에이전트 코드 리뷰 (v0.15+, unified): Direct + Indirect baseline + 변경 패턴에 따른 Deep-Focus(0~3) + Comparator. 꼼꼼함 강화(Critical/Major reproduction·verification·reasoning 필수)
+- `/code-review` - 통합 다중 에이전트 코드 리뷰 (v0.15+, unified): Direct + Indirect baseline + 변경 패턴에 따른 Deep-Focus(0~3) + Comparator. 꼼꼼함 강화(Critical/Major reproduction·verification·reasoning 필수). 완료 시 major+ followup을 중앙 백로그에 자동 append
 - `/code-review-fix` - 코드 리뷰 결과의 fix_now 항목을 파일별 병렬 수정
+- `/review-backlog` - **v0.16+** 여러 리뷰에 걸친 followup/보류 항목 중앙 백로그 관리. list/resolve/dismiss/stale-check/import-all/stats. dedup key로 반복 지적된 이슈는 occurrence_count 누적
 - `/code-review-walk` - 리뷰 finding을 하나씩 유저와 함께 점검 (작업/패스/보류 상태 저장, 다음 실행 시 중복 제외)
 - `/guide-init` - 프로젝트 분석 → `.harness/guide.md` 가이드 문서 생성/업데이트
 - `/guide-check` - 가이드 vs 현재 코드 비교 → 불일치 항목 확인 및 저장 (히스토리 기반 범위 자동 결정)
@@ -54,6 +55,7 @@ Personal productivity plugin for Claude Code.
 | 2026-04-20 | 3단계 중첩 → flat 10-expert 구조로 재설계, cr-orchestrator/cr-supervisor 삭제, Lens A/B 도입 | agents, skills | Claude Code가 subagent의 nested spawn 미지원 (공식 문서 확정) |
 | 2026-04-20 | /code-review-slim 추가 (cr-direct-reviewer + cr-indirect-reviewer + comparator, 총 3 spawn) | agents, skills, commands | 5×2 구조와 3-agent 구조의 효과 비교 측정용 |
 | 2026-04-20 | v0.15 unified: /code-review-slim을 /code-review로 통합. Direct + Indirect + Deep-Focus(자동 감지, 0~3) 하이브리드. 꼼꼼함 요구사항 강화(reproduction/verification/reasoning 필수), 심각도 캘리브레이션 교차검증 추가 | agents, skills, references, commands | 측정 결과 slim의 cross-category 강점 + flat의 깊이를 모두 살리는 방향으로 단일화 |
+| 2026-04-21 | v0.16 /review-backlog 추가: 리뷰 followup/보류 항목 중앙 집중. dedup key(file+symbol+category+keywords)로 반복 지적 자동 병합, occurrence_count로 우선순위 시그널. /code-review 완료 시 major+ followup 자동 append, /code-review-walk [d]보류 시 수동 push. scripts/backlog_tool.py로 CRUD + stale-check + render-md | scripts, skills, commands | 이전 버전에서는 followup이 각 review 폴더에 흩어져 실질적 망각. 중앙 집중으로 기술 부채 가시화 및 트렌드 추적 |
 
 ## MCP Tools
 - `harness_project_info` - Get structured project metadata (git info, package info, file stats)

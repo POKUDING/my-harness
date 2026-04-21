@@ -285,6 +285,24 @@ actual_spawn=$(grep -c '"event":"agent_spawn"' "$TRACE")
 grep '"event":"spawn_unavailable"' "$TRACE" && echo "WARN: fallback triggered" || true
 ```
 
+### Step 6.5: 백로그 자동 Append (major+ followup만)
+
+리뷰 완료 후 `scope: followup` + `severity ≥ major` 항목을 **중앙 백로그에 자동 append**한다. dedup key로 이전 리뷰에서 이미 잡힌 이슈는 `occurrence_count`만 증가시키므로 중복 걱정 없음.
+
+```bash
+python3 scripts/backlog_tool.py add --review-json "${PREFIX}-review.json" --only-major-plus
+# → stdout: [backlog] added=N updated=M total_open=K
+```
+
+출력의 `added`와 `updated`를 Step 7 요약에 포함.
+
+**append 정책:**
+- severity `critical` / `major` + `scope: followup` → 자동 추가
+- `minor` / `nit` → 추가 안 함 (노이즈 방지). 필요하면 `/code-review-walk`에서 [d] 보류 선택 시만 추가됨
+- `fix_now` → 지금 수정해야 하므로 백로그 제외 (별도 해결 경로)
+
+**스크립트 실패 시:** 리뷰 자체는 성공으로 처리하고 경고만 표시. 백로그 append 실패가 리뷰 완료를 막지 않는다.
+
 ### Step 7: 최종 요약 출력
 
 ```markdown
@@ -296,11 +314,13 @@ grep '"event":"spawn_unavailable"' "$TRACE" && echo "WARN: fallback triggered" |
 - 합의율: 67%, 고유 발견: Direct 2건 / Indirect 4건 / Deep 3건
 - Execution Trace: 5 spawn / 5 return ✅
 - Top 3 우선순위: CR-001, CR-004, CR-007 (executive summary 참조)
+- 백로그: 신규 3건 추가, 재발견 1건 (open 총 N건) → `/review-backlog` 으로 확인
 
 ### 다음 단계
 - 리포트 검토: 위 경로
 - 자동 수정: `/code-review-fix`
 - 대화형 점검: `/code-review-walk`
+- 백로그 관리: `/review-backlog`
 ```
 
 `validation_warnings`가 있으면 상단에 경고 배너.

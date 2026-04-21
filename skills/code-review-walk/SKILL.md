@@ -277,6 +277,18 @@ try {
      "timestamp": "..."
    }
    ```
+8. **중앙 백로그에서 대응 항목 resolve** — 이 finding이 이전 리뷰에서 이미 백로그에 올라가 있었다면 자동 해결 처리:
+   ```bash
+   # 먼저 backlog에서 같은 이슈를 찾는다 (dedup_key 기반)
+   python3 scripts/backlog_tool.py list --file "<finding.file>" --json > /tmp/bl_search.json
+   # Python 한 줄로 매칭 후보 추출 (file + symbol + category 일치)
+   BL_ID=$(python3 -c "import json,sys; e=[x for x in json.load(open('/tmp/bl_search.json')) if x.get('symbol')=='<finding.symbol>' and x.get('category')=='<finding.category>']; print(e[0]['id'] if e else '')")
+   if [[ -n "$BL_ID" ]]; then
+     python3 scripts/backlog_tool.py resolve "$BL_ID" --commit "<방금 커밋 SHA>" --approach "<action 요약>"
+     echo "[walk] backlog $BL_ID auto-resolved"
+   fi
+   ```
+   매칭이 없으면 조용히 진행. walk에서의 작업은 "새로 발견한 finding을 바로 수정"한 경우가 많아 backlog에 항목이 없는 게 정상.
 
 ### 자동 커밋 메시지 템플릿
 
@@ -323,6 +335,22 @@ Files:   {file1}, {file2}, ...
      "timestamp": "..."
    }
    ```
+3. **중앙 백로그에 push** — 모든 보류 항목이 `.harness/review-backlog/backlog.json`으로 흘러들어 여러 리뷰에 걸쳐 추적되도록:
+   ```bash
+   python3 scripts/backlog_tool.py add-manual \
+     --file "<finding.file>" \
+     --title "<finding.title>" \
+     --severity "<finding.severity>" \
+     --category "<finding.category>" \
+     --problem "<finding.problem>" \
+     --recommendation "<finding.recommendation>" \
+     --symbol "<finding.symbol>" \
+     --lines "<finding.lines>" \
+     --note "<user_note>" \
+     --source-review "<review.json 절대 경로>"
+   ```
+   dedup key가 이미 존재하면 `occurrence_count`만 증가 → 여러 번 보류된 이슈는 더 눈에 띄게 됨.
+   스크립트 실패 시 경고만 표시하고 walk는 계속 진행 (state는 저장됨).
 
 **[s] 건너뛰기:**
 - state 변경 없음. 다음 finding으로 이동.
