@@ -299,6 +299,38 @@ AskUserQuestion({
 - 계획서의 "확인 필요 사항" 항목 중 brainstorming으로 해소된 항목은 자동 제거.
 - **매 라운드 종료 시점마다** 파일을 즉시 저장(Edit/Write)하여 도중 세션 중단에도 결과 유지.
 
+##### E. 항목 종료 분기 (Stop)
+
+매 항목 명확화 종료 시점에:
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "TODO-XXX 명확화 완료. 다음은?",
+    header: "Next",
+    options: [
+      { label: "다음 후보로 진행 (Recommended)",
+        description: "남은 brainstorming 후보 중 첫 번째로 이동." },
+      { label: "여기서 멈추고 계획서 마무리",
+        description: "남은 후보들은 '확인 필요 사항'에 push. Step 3으로 즉시 진행." },
+      { label: "이 항목 한 라운드 더",
+        description: "추가 질문이 필요. 같은 항목을 한 번 더 라운드 진행." }
+    ],
+    multiSelect: false
+  }]
+})
+```
+
+- 1번 선택: 다음 후보가 있으면 그것으로 이동. 없으면 Step 3으로 자동 진행.
+- 2번 선택: 처리되지 않은 나머지 후보를 계획서의 "확인 필요 사항" 섹션에 push (이미 거기 있던 항목은 중복 추가 안 함). Step 3으로 진행.
+- 3번 선택: 같은 항목으로 라운드 1회 더. 4 라운드 도달 시 라운드 4 분기(C)와 동일 처리.
+
+##### F. 재실행 시 자동 제외
+
+`/slack-plan`을 같은 List에 다시 실행할 때, 계획서에 이미 `#### 명확화 결과 (Brainstorming, ...)` 섹션이 있는 TODO는 Step 2.5.1의 후보 선정에서 자동 제외한다.
+
+판정 룰: TODO 블록 안에 `#### 명확화 결과 (Brainstorming` 헤더가 존재하면 "이미 명확화됨"으로 간주.
+
 ### Step 3: 상태를 진행중으로 변경
 
 계획서에 포함된 아이템들의 상태를 `진행중`으로 변경한다.
