@@ -6,7 +6,7 @@ Personal productivity plugin for Claude Code.
 - `/slack-setup` - 프로젝트 단위 API 토큰 설정 (`.harness/config.env`에 저장, gitignored)
 - `/proj-status` - 현재 프로젝트 상태 분석 (git, 파일, 의존성)
 - `/code-review-quick` - 빠른 단일 에이전트 코드 리뷰 (가벼운 점검). 본격 리뷰는 `/code-review` 사용
-- `/slack-plan` - Slack List에서 작업 계획서 자동 생성
+- `/slack-plan` - Slack List에서 작업 계획서 자동 생성. **v0.19+**: 모호 TODO 자동 식별 후 brainstorming 라운드(Step 2.5)로 명확화
 - `/slack-review` - Slack List 미완료 항목 확인 → 코드리뷰 → 완료 처리
 - `/code-review` - 통합 다중 에이전트 코드 리뷰 (v0.15+, unified): Direct + Indirect baseline + 변경 패턴에 따른 Deep-Focus(0~3) + Comparator. 꼼꼼함 강화(Critical/Major reproduction·verification·reasoning 필수). 완료 시 major+ followup을 중앙 백로그에 자동 append
 - `/code-review-fix` - 코드 리뷰 결과의 fix_now 항목을 파일별 병렬 수정
@@ -61,6 +61,7 @@ Personal productivity plugin for Claude Code.
 | 2026-04-21 | v0.17.0 AskUserQuestion 패턴을 4개 추가 스킬로 확장: /slack-review(미작업 진행 + 완료 처리 multiSelect), /code-review-fix(수정 계획 preview + 파일 선택 multiSelect), /slack-plan(완료 후 다음 단계 분기), /plan-execute(실행 계획 preview + 자가 수정 실패 시 분기). 모든 스킬 상단에 "사용자 입력 UI" 원칙 명시. | skills/slack-review, code-review-fix, slack-plan, plan-execute | 텍스트 기반 Y/n 프롬프트를 구조화 UI로 일관 전환. multiSelect/preview 활용으로 일괄 확인·선택 적용·시각 검토 가능 |
 | 2026-04-21 | v0.17.1 테스트 강제 톤 완화: plan-executor는 완료 기준에 명시됐거나 기존 테스트가 있을 때만 테스트 작성(기본 미작성). cr-direct/indirect-reviewer와 report-format의 verification 필드 예시·가이드를 수동 재현·로그·메트릭·기존 테스트 보강·신규 테스트 순으로 재정렬. 신규 테스트 파일 생성은 최후 선택으로 강등. | agents/plan-executor, cr-direct-reviewer, cr-indirect-reviewer, references/report-format | 에이전트가 자발적으로 테스트 파일을 추가하던 과잉 동작 제거. 사용자가 원치 않는 테스트 작성 억제 |
 | 2026-04-21 | v0.18.0 /code-review-walk 비동기 워커 모델 도입: 승인된 fix의 Edit·typecheck·commit을 새 cr-walk-worker(Sonnet) 에이전트가 background spawn으로 전담. Opus 메인은 리뷰·승인까지만 하고 즉시 다음 finding으로 이동. state에 in_progress_bg / bg_failed 추가, 종료 시 pending 워커 대기 + 결과 집계. 파일 겹침 감지로 직렬화. | agents/cr-walk-worker, skills/code-review-walk | 이전에는 [w] 작업 시 Edit/typecheck/commit 동안 유저가 대기. 이제 다음 finding 리뷰를 바로 이어서 진행 가능 → 대기시간 제거 |
+| 2026-05-06 | v0.19.0 /slack-plan에 Targeted Brainstorming(Step 2.5) 통합: 자동 휴리스틱(T1~T5)으로 모호 TODO 후보 ≤5 선정 → AskUserQuestion 진입 분기 → 항목별 깊이 우선 라운드(상한 3, 종료 3요소: 행위·범위·완료기준) → 명확화 결과를 계획서 TODO 아래에 append → 매 항목 stop 분기. 재실행 시 명확화된 TODO 자동 제외. spec/plan은 docs/superpowers/{specs,plans}/ (gitignored). | skills/slack-plan | 모호한 Slack 요청이 그대로 plan-execute로 흘러가 추측 코드를 만드는 문제 해결. 한 번에 한 질문 패턴으로 의도/범위/완료기준 확정 |
 
 ## MCP Tools
 - `harness_project_info` - Get structured project metadata (git info, package info, file stats)
