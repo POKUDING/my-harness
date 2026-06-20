@@ -17,6 +17,7 @@ Personal productivity plugin for Claude Code.
 - `/guide-fix` - guide-check 결과의 불일치 항목을 가이드에 반영하고 기록 저장
 - `/plan-execute` - 작업 계획서(docs/plans/*-plan.md)의 TODO를 의존성 분석 후 병렬 executor로 자동 구현 (ultrawork + ralph 패턴)
 - `/api-summary` - 작업 완료 후 **협업팀 공유용** API 변경 요약 문서 생성 (독립 스킬, 체인의 일부 아님). 지정 범위의 API를 자동 파싱하여 신규/수정/삭제로 분류. Express/NestJS/FastAPI/Django REST/Flask 등 자동 감지
+- `/handover-init` - **v0.21+** 프로젝트 인수인계 폴더(handover/)를 자동 생성. 코드 분석 + 클라우드 CLI(AWS) + 사용자 인터뷰의 3단계 파이프라인으로 ete-django 수준의 15절+Mermaid 인수인계 문서를 만든다
 
 ## Agents
 - `my-harness:researcher` (Sonnet) - Deep codebase research and analysis
@@ -62,6 +63,7 @@ Personal productivity plugin for Claude Code.
 | 2026-04-21 | v0.17.1 테스트 강제 톤 완화: plan-executor는 완료 기준에 명시됐거나 기존 테스트가 있을 때만 테스트 작성(기본 미작성). cr-direct/indirect-reviewer와 report-format의 verification 필드 예시·가이드를 수동 재현·로그·메트릭·기존 테스트 보강·신규 테스트 순으로 재정렬. 신규 테스트 파일 생성은 최후 선택으로 강등. | agents/plan-executor, cr-direct-reviewer, cr-indirect-reviewer, references/report-format | 에이전트가 자발적으로 테스트 파일을 추가하던 과잉 동작 제거. 사용자가 원치 않는 테스트 작성 억제 |
 | 2026-04-21 | v0.18.0 /code-review-walk 비동기 워커 모델 도입: 승인된 fix의 Edit·typecheck·commit을 새 cr-walk-worker(Sonnet) 에이전트가 background spawn으로 전담. Opus 메인은 리뷰·승인까지만 하고 즉시 다음 finding으로 이동. state에 in_progress_bg / bg_failed 추가, 종료 시 pending 워커 대기 + 결과 집계. 파일 겹침 감지로 직렬화. | agents/cr-walk-worker, skills/code-review-walk | 이전에는 [w] 작업 시 Edit/typecheck/commit 동안 유저가 대기. 이제 다음 finding 리뷰를 바로 이어서 진행 가능 → 대기시간 제거 |
 | 2026-05-06 | v0.19.0 /slack-plan에 Targeted Brainstorming(Step 2.5) 통합: 자동 휴리스틱(T1~T5)으로 모호 TODO 후보 ≤5 선정 → AskUserQuestion 진입 분기 → 항목별 깊이 우선 라운드(상한 3, 종료 3요소: 행위·범위·완료기준) → 명확화 결과를 계획서 TODO 아래에 append → 매 항목 stop 분기. 재실행 시 명확화된 TODO 자동 제외. spec/plan은 docs/superpowers/{specs,plans}/ (gitignored). | skills/slack-plan | 모호한 Slack 요청이 그대로 plan-execute로 흘러가 추측 코드를 만드는 문제 해결. 한 번에 한 질문 패턴으로 의도/범위/완료기준 확정 |
+| 2026-06-20 | v0.21.0 /handover-init 신규 스킬: 프로젝트 인수인계 폴더 자동 생성. 3단계 파이프라인(코드 분석 + 멀티클라우드 CLI[AWS 첫 구현, 4 stub] + 사용자 인터뷰). 17 절 후보 풀(A~Q) + 자동 선별 룰 + 절별 자유 텍스트 인터뷰 + Mermaid 자동 생성/일괄 검토. ete-django/handover 패턴 참고. | skills/handover-init, commands/handover-init | 큰 프로젝트 인수인계 문서 초기 작성에 며칠~몇 주 소요되는 문제 해결. 운영 정보와 클라우드 리소스를 자동 + 인터뷰로 채워 처음부터 ete-django 수준 퀄리티 |
 
 ## MCP Tools
 - `harness_project_info` - Get structured project metadata (git info, package info, file stats)
