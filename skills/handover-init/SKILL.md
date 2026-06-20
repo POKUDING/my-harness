@@ -251,7 +251,6 @@ AskUserQuestion({
 
 `{output_dir}/README.md`를 자동 생성:
 
-```markdown
 # {프로젝트명} 인수인계 문서
 
 > {프로젝트 1줄 설명}
@@ -286,13 +285,11 @@ AskUserQuestion({
 - 생성 일시: {YYYY-MM-DD}
 - [확인 필요] 마커 개수: {count}
 - AI-generated 다이어그램 개수: {count}
-```
 
 절 파일은 `{output_dir}/01-{slug}.md` ~ `{output_dir}/NN-{slug}.md` 순서. slug는 절 제목에서 자동 생성(소문자·하이픈).
 
 ### Step 8: 결과 보고
 
-````markdown
 ## Handover Init 완료
 
 ### 생성 파일
@@ -325,7 +322,6 @@ handover/
 
 - `.harness/handover-init/{TS}-state.json` — 재실행/디버깅용
 - `.harness/handover-init/{TS}-cloud-output.log` — 클라우드 CLI 출력 로그
-````
 
 ## 안전 장치
 
