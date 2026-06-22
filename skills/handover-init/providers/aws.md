@@ -94,14 +94,43 @@ aws sts get-caller-identity 2>/dev/null
 
 ## 금지 명령
 
-- 모든 `*-create-*`, `*-delete-*`, `*-update-*`, `*-put-*`
-- `aws iam *` (권한 변경 가능성)
-- `aws secretsmanager get-secret-value` (값 노출)
-- `aws ssm get-parameter --with-decryption` (값 노출)
-- `aws ce *`, `aws cost-explorer *` (비용 발생)
-- `aws s3 sync`, `aws s3 cp` (대량 다운로드)
+**핵심 원칙: 위 Commands 화이트리스트에 명시되지 않은 모든 명령은 자동으로 금지된다.** 아래는 자주 시도되지만 절대 호출하면 안 되는 명령을 명시적으로 나열한 것 — 화이트리스트와 이 목록을 모두 확인하라.
 
-이외 명령이 필요하면 사용자에게 물어보고 추가하라. 임의 실행 금지.
+### Mutation 명령 (생성/수정/삭제/등록 — 모두 금지)
+
+다음 동사로 시작하거나 포함하는 명령은 모두 mutation으로 간주하고 금지:
+`create-*`, `delete-*`, `update-*`, `put-*`, `run-instances`, `start-*`, `stop-*`, `terminate-*`, `reboot-*`, `register-*`, `deregister-*`, `attach-*`, `detach-*`, `associate-*`, `disassociate-*`, `modify-*`, `restore-*`, `rotate-*`, `enable-*`, `disable-*`, `tag-*`, `untag-*`
+
+예시 (모두 금지):
+- `aws ec2 run-instances`, `aws ec2 terminate-instances`, `aws ec2 reboot-instances`
+- `aws ec2 create-vpc`, `aws ec2 delete-security-group`
+- `aws iam create-role`, `aws iam put-role-policy`, `aws iam attach-role-policy`
+- `aws rds create-db-instance`, `aws rds modify-db-instance`, `aws rds delete-db-instance`
+- `aws s3api put-object`, `aws s3api delete-object`
+- `aws ecs register-task-definition`, `aws ecs update-service`, `aws ecs run-task`
+- `aws events put-rule`, `aws events put-targets`
+- `aws sqs send-message`, `aws sns publish`
+
+### 권한 변경 (전부 금지)
+
+- `aws iam *` (모든 IAM 명령 — read도 권한 발급 트리거 가능)
+
+### Secret/Parameter 값 노출 (전부 금지)
+
+- `aws secretsmanager get-secret-value`
+- `aws ssm get-parameter --with-decryption`
+- `aws ssm get-parameters --with-decryption`
+- `aws kms decrypt`, `aws kms encrypt`
+
+### 비용 발생 명령
+
+- `aws ce *`, `aws cost-explorer *` (재무 정보 노출 + 호출당 비용)
+- `aws athena start-query-execution` (쿼리 비용)
+- `aws s3 sync`, `aws s3 cp` (대량 다운로드/업로드)
+
+### 그 외 임의 실행 금지
+
+위에 명시되지 않았어도 **Commands 화이트리스트에 없으면 모두 금지**. 새 명령이 필요하면 사용자에게 묻고 화이트리스트에 추가한 다음 실행하라.
 
 ## Output Mapping
 

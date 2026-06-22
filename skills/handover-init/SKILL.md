@@ -102,7 +102,7 @@ for provider_file in providers/*.md:
 ```
 
 **안전장치**:
-- 화이트리스트 외 명령 호출 시 사용자에게 알림 후 중단.
+- **화이트리스트 강제 원칙**: providers/aws.md의 Commands 섹션에 명시된 명령만 실행. 그 외는 사용자에게 알림 후 중단. AWS CLI는 mutation 동사(`create-*`, `delete-*`, `update-*`, `put-*`, `run-instances`, `start-*`, `stop-*`, `terminate-*`, `register-*`, `attach-*`, `modify-*`, `enable-*`, `disable-*` 등)가 다양하므로, 명시적 화이트리스트 매칭 외 모든 명령은 금지로 간주.
 - 출력에서 secret/credential 패턴(AKIA*, ARN secret 값) 자동 마스킹.
 - 모든 호출 결과는 `.harness/handover-init/{TS}-cloud-output.log`에 저장.
 - 50줄 초과 출력은 head 20 + tail 20.
